@@ -55,7 +55,7 @@
 
 - [ ] **6.1** 开发异想体档案库页 `AbnormalityGalleryPage`：未解锁项显示黄黑斜纹"Caution"遮盖板
 - [ ] **6.2** 实现提取仪式动画 `ExtractionCeremonyWidget`：黄色光栅扫描线上下滚动，揭晓档案立绘
-- [ ] **6.3** 开发工作交互界面：四种工作按钮（本能/洞察/沟通/压迫），实现成功率公式 `clamp(weight × aptitude / 10, 0.05, 0.95)`，处理大失败（成功率 < 20% 时 `qliphothCounter -1`），PE Box 产出 `floor(weight × aptitude × 2)`，每次工作生成 `WorkLog` 记录
+- [ ] **6.3** 开发工作交互界面：四种工作按钮（本能/洞察/沟通/压迫），实现成功率公式 `clamp(weight × aptitude / 10, 0.05, 0.95)`，处理大失败（成功率 < 20% 且判定失败时 `qliphothCounter -1`），PE Box 产出 `floor(weight × aptitude × 2)`，每次工作生成 `WorkLog` 记录
 - [ ] **6.4** 实现 `energyLevel` 变化与消极状态：成功 +10 / 失败 -15（消极状态下保底 +5），归零进入消极状态（权重 ×0.5），恢复到 30 以上解除
 - [ ] **6.5** 实现沟通工作的对话气泡 UI，预留大模型 API 调用占位符（`AttachmentService.mockResponse()`）
 - [ ] **6.6** 实现工作反馈展示：根据 `success/fail` 从 `workReactions[{workType}_{result}]` 读取文案
@@ -70,7 +70,7 @@
   - `none` → 仅重置计数器
   - `penaltyBox` → 立即扣除 `penaltyAmount`% 的 PE Box（PE Box clamp ≥ 0）
   - `escape` → 进入出逃状态，每分钟扣除 `escapeDrain` PE Box
-- [ ] **7.4** 实现出逃与镇压：主管可选镇压或不镇压；不镇压则 30 分钟后自动返回；镇压成功率 `clamp(Σ(equippedEgo.suppression × 0.1) + 0.2, 0.1, 0.9)`，成功奖励 `floor(qliphothMax × 2)` PE Box，失败员工 HP -20（HP clamp ≥ 0）
+- [ ] **7.4** 实现出逃与镇压：主管可选镇压或不镇压；不镇压则 30 分钟后自动返回；镇压成功率 `clamp(Σ(equippedEgo.bonusStats[suppression] × 0.1) + 0.2, 0.1, 0.9)`，成功奖励 `floor(qliphothMax × 2)` PE Box，失败员工 HP -20（HP clamp ≥ 0）
 - [ ] **7.5** 实现员工受伤机制：HP 归零进入"受伤"状态无法工作，每小时自然恢复 10 HP（clamp 至 `maxHp`）
 - [ ] **7.6** 实现 EGO 装备商店 `EgoShopPage`：PE Box 消费兑换装备，员工详情页支持穿脱
 
