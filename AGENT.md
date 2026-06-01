@@ -2,7 +2,9 @@
 
 ## 1. 项目概述
 
-本项目是一个基于 Flutter 开发的沉浸式生活记录与模拟管理 App。界面采用脑叶公司（Lobotomy Corporation）工业风格，核心逻辑分为**日记系统**与**工作系统**。本项目的核心哲学是"观测与秘密"，所有的管理数据均服务于深度沉浸感。
+本项目是一个基于 Flutter 开发的沉浸式生活记录与模拟管理 App，**目标平台为 Android**（v1.0 仅发布安卓端，iOS 后续考虑）。界面采用脑叶公司（Lobotomy Corporation）工业风格，核心逻辑分为**日记系统**与**工作系统**。本项目的核心哲学是"观测与秘密"，所有的管理数据均服务于深度沉浸感。
+
+> 平台说明：最低支持版本建议 Android 8.0（API 26）。
 
 ---
 
@@ -14,12 +16,11 @@
 
 - **多维观测日志**：支持 Markdown 文本、照片证据（多图）、音频采样。
 - **认知滤网（Tags）**：支持预设标签与用户自定义标签，自定义标签会永久计入匹配引擎。
-- **环境参数（Metadata）**：自动记录天气、地理位置、步数、当前播放音乐，作为"站点环境数据"影响共鸣度计算。
 - **神秘感原则（The Secret of Resonance）**：
   - 共鸣度数值（`currentResonance` / `resonanceDeltas` 等）是后端计算的核心数值，**严禁在前端 UI 以任何形式（数字、百分比、进度条等）展示给用户**。
   - 用户只能通过异想体档案的"遮盖状态变化"或"可提取提醒"来感知进度，无法预知确切的解锁分值。
 - **共鸣度算法（Resonance Algorithm）**：
-  - 每条日记内容（文本 + 标签 + 环境参数）提交给大模型，由大模型判断与所有**未解锁**异想体 `featureTags` 的语义匹配度，返回每个异想体的共鸣度增量（写入 `DiaryEntry.resonanceDeltas` 并累加到 `Abnormality.currentResonance`）。
+  - 每条日记内容（文本 + 标签）提交给大模型，由大模型判断与所有**未解锁**异想体 `featureTags` 的语义匹配度，返回每个异想体的共鸣度增量（写入 `DiaryEntry.resonanceDeltas` 并累加到 `Abnormality.currentResonance`）。
   - 大模型 Prompt 需约束输出格式为结构化 JSON，仅包含异想体 ID 与分数增量，禁止返回解释性文本。
   - 单条日记可同时为多个异想体加分；日记本身不绑定任何异想体。
   - `currentResonance` 累加至 `requiredResonance`，**且**累计记录天数达到 `requiredDays` 时，该异想体进入可提取状态（两个条件需同时满足）。
@@ -98,7 +99,6 @@ class DiaryEntry {
   String content;                          // Markdown 文本
   List<String> attachments;                // 图片/音频 URL
   List<String> cognitiveFilters;           // 自定义 + 预设标签
-  Map<String, dynamic> environmentalData; // 天气/坐标/步数/音乐
   Map<String, int> resonanceDeltas;        // ⚠️ Hidden from UI，本条日记对各异想体的共鸣度增量 {abnormalityId: delta}
   DateTime createdAt;
 }
