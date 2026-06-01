@@ -22,7 +22,7 @@
   - 每条日记内容（文本 + 标签 + 环境参数）提交给大模型，由大模型判断与所有**未解锁**异想体 `featureTags` 的语义匹配度，返回每个异想体的共鸣度增量（写入 `DiaryEntry.resonanceDeltas` 并累加到 `Abnormality.currentResonance`）。
   - 大模型 Prompt 需约束输出格式为结构化 JSON，仅包含异想体 ID 与分数增量，禁止返回解释性文本。
   - 单条日记可同时为多个异想体加分；日记本身不绑定任何异想体。
-  - `currentResonance` 累加至 `requiredResonance` 时，该异想体进入可提取状态。
+  - `currentResonance` 累加至 `requiredResonance`，**且**累计记录天数达到 `requiredDays` 时，该异想体进入可提取状态（两个条件需同时满足）。
 - **解锁规则**：
   - **门控**：累计记录天数上限封顶为 **30 天**。
   - **每日提取**：每天随机抽取 **3 个**候选异想体，用户可选择 **1 个**解锁。按自然日（0:00）重置。
@@ -134,7 +134,7 @@ class Abnormality {
   bool isUnlocked;
   bool isInitial;                // true = 自动解锁，不进入提取池
   DateTime? unlockDate;
-  int energyLevel;               // 0-100
+  int energyLevel;               // 0-100，新解锁时初始值 50
   int qliphothCounter;
   int qliphothMax;
   BreachType breachType;
