@@ -187,21 +187,21 @@ assets/abnormalities/portraits/O-03-03.png    # 详情立绘
 
 ---
 
-## 6. UI/UX 规范（L-Corp Yellow & Black）
+## 6. UI/UX 规范（L-Corp）
 
 | 用途 | 色值 |
 | ---- | ---- |
-| 主背景 Background | `#121212` 深碳黑 |
-| 主色 / 强调 Primary | `#FFD700` 警戒黄 |
-| 次级表面 Surface | `#262626` 暗炭灰 |
-| 警告 / 活跃 Alert | `#FF8F00` 琥珀橙 |
+| 主背景 Background | `#1A2A3A` 深蓝 |
+| 主色 / 强调 Primary | `#6E8AA6` 工业蓝灰 |
+| 次级表面 Surface | `#233447` 深蓝灰 |
+| 警告 / 活跃 Alert | `#E53935` 警报红 |
 
 视觉语言：
-- 全局 `LCorpGridBackground` 暗黄网格底
-- `LCorpButton` 扫描线持续上下滚动
-- `CautionOverlay` 黄黑斜纹机密遮盖板
-- `QliphothCounterWidget` 分段式 LED 风格，归零红黄闪烁
-- `BreachAlertOverlay` 全屏黑黄交替闪烁 + ERROR 像素抖动
+- 全局 `LCorpGridBackground` 蓝灰网格底
+- `LCorpButton` 方角静态按钮（点击 ripple 反馈，无持续动画）
+- `CautionOverlay` 警报红 / 深蓝斜纹机密遮盖板
+- `QliphothCounterWidget` 分段式 LED 风格，归零红色闪烁
+- `BreachAlertOverlay` 全屏深蓝 / 警报红交替闪烁 + ERROR 像素抖动
 
 > ⚠️ **核心禁令**：界面禁止出现任何代表共鸣度进度的百分比、数字或进度条组件。
 

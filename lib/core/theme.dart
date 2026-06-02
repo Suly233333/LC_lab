@@ -2,41 +2,41 @@ import 'package:flutter/material.dart';
 
 /// L-Corp 风格主题定义。
 ///
-/// 配色规范（见 AGENT.md §4）：
-/// - 主背景（Background）：深碳黑 #121212
-/// - 主色 / 强调（Primary / Accent）：警戒黄 #FFD700
-/// - 次级表面（Surface）：暗炭灰 #262626
-/// - 警告 / 活跃（Alert / Active）：琥珀橙 #FF8F00
+/// 配色规范：
+/// - 主背景（Background）：深蓝 #1A2A3A
+/// - 主色 / 强调（Primary / Accent）：工业蓝灰 #6E8AA6
+/// - 次级表面（Surface）：深蓝灰 #233447
+/// - 警告 / 活跃（Alert / Active）：警报红 #E53935
 class AppColors {
   AppColors._();
 
-  /// 主背景色：深碳黑。
-  static const Color background = Color(0xFF121212);
+  /// 主背景色：深蓝。
+  static const Color background = Color(0xFF1A2A3A);
 
-  /// 主强调色：警戒黄。
-  static const Color primary = Color(0xFFFFD700);
+  /// 主强调色：工业蓝灰。
+  static const Color primary = Color(0xFF6E8AA6);
 
-  /// 次级表面色：暗炭灰。
-  static const Color surface = Color(0xFF262626);
+  /// 次级表面色：深蓝灰（比背景略浅）。
+  static const Color surface = Color(0xFF233447);
 
-  /// 警告 / 活跃色：琥珀橙。
-  static const Color alert = Color(0xFFFF8F00);
+  /// 警告 / 活跃色：警报红。
+  static const Color alert = Color(0xFFE53935);
 
   /// 主文字色（在深色背景上的亮色文字）。
-  static const Color onBackground = Color(0xFFE0E0E0);
+  static const Color onBackground = Color(0xFFD7E3EE);
 
   /// 次要文字 / 提示文字。
-  static const Color hint = Color(0xFF8A8A8A);
+  static const Color hint = Color(0xFF7A8A98);
 
-  /// 危险 / 错误（突破警报红边缘）。
-  static const Color danger = Color(0xFFB00020);
+  /// 危险 / 错误（突破警报深红边缘）。
+  static const Color danger = Color(0xFFB71C1C);
 
-  /// 网格线色：暗黄网格（半透明 primary）。
-  static const Color gridLine = Color(0x1AFFD700);
+  /// 网格线色：半透明蓝灰网格。
+  static const Color gridLine = Color(0x336E8AA6);
 
-  /// 机密遮盖斜纹底色。
-  static const Color cautionStripe = Color(0xFFFFD700);
-  static const Color cautionStripeAlt = Color(0xFF121212);
+  /// 机密遮盖斜纹底色：警报红 / 深蓝交替。
+  static const Color cautionStripe = Color(0xFFE53935);
+  static const Color cautionStripeAlt = Color(0xFF1A2A3A);
 }
 
 /// L-Corp App 全局主题。
