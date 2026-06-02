@@ -41,7 +41,9 @@ class ExtractionService {
       if (a.isUnlocked) return false;
       if (a.isInitial) return false;
       if (a.currentResonance < a.requiredResonance) return false;
-      if (days < a.requiredDays) return false;
+      // requiredDays 解锁阈值硬上限 30 天：即使预设写大也按 30 处理。
+      final int dayThreshold = a.requiredDays > 30 ? 30 : a.requiredDays;
+      if (days < dayThreshold) return false;
       return true;
     }).toList(growable: false);
   }

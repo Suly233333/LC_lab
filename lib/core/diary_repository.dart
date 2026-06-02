@@ -70,7 +70,10 @@ class DiaryRepository {
     return rows.map(_fromRow).toList(growable: false);
   }
 
-  /// 累计独立日记天数（用于 requiredDays 判定，封顶 30）。
+  /// 累计独立日记天数。
+  ///
+  /// 异想体 [requiredDays] 解锁阈值的硬上限为 30，因此查询时直接按
+  /// [cap] = 30 截断即可满足任何资格判定，无需统计更高的天数。
   Future<int> distinctDayCount({int cap = 30}) async {
     final Database db = await _helper.database;
     final List<Map<String, Object?>> rows = await db.rawQuery(
