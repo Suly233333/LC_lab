@@ -33,7 +33,7 @@
 
 ## 第四阶段：状态管理与共鸣度引擎（Riverpod）
 
-- [ ] **4.1** 使用 `StateNotifierProvider` 建立全局状态：已解锁异想体列表、日记列表、PE Box 计数（下限 0）、当日提取状态
+- [x] **4.1** 使用 `StateNotifierProvider` 建立全局状态：已解锁异想体列表、日记列表、PE Box 计数（下限 0）、当日提取状态
 - [ ] **4.2** 实现共鸣度引擎 `ResonanceService`：将日记内容（文本 + cognitiveFilters）提交给大模型，要求其返回结构化 JSON `{abnormalityId: delta}`，写入 `DiaryEntry.resonanceDeltas` 并累加到对应 `Abnormality.currentResonance`；**严禁将共鸣度数值暴露给 UI 层**
 - [ ] **4.3** 实现每日提取逻辑：当 `currentResonance ≥ requiredResonance` **且** 累计天数 ≥ `requiredDays` 时进入候选池；每天随机抽取 3 个候选，按自然日 0:00 重置；用户每日最多解锁 1 个
 - [ ] **4.4** 实现定时任务：每 8 小时检测每个已解锁异想体是否有互动（写日记不算，需为工作执行），无互动则 `qliphothCounter -1`
