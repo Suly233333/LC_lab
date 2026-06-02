@@ -213,7 +213,7 @@ class _LogCard extends ConsumerWidget {
             color: AppColors.primary,
             fontWeight: FontWeight.bold),
         content: const TerminalText(
-          '此操作不可撤销，共鸣度增量记录将一并清除。',
+          '此操作不可撤销，与该观测相关的隐藏记录将一并清除。',
           fontSize: 12,
           color: AppColors.onBackground,
         ),
