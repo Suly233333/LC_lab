@@ -17,7 +17,7 @@
 - [x] **2.1** 实现 `lib/models/abnormality.dart`，包含 `Abnormality` 类与 `BreachType` 枚举（escape / penaltyBox / none），并包含字段：`requiredResonance` / `currentResonance`（标注为隐藏字段）、`energyLevel`（默认 50）、`qliphothCounter` / `qliphothMax`、`penaltyAmount`、`escapeDrain`、`workReactions`（key 格式 `{workType}_{result}`）
 - [x] **2.2** 实现 `lib/models/diary_entry.dart`，字段包括：`content`（Markdown）、`attachments`、`cognitiveFilters`、`resonanceDeltas`（隐藏字段，对各异想体的共鸣度增量）、`createdAt`；**不包含** `abnormalityId` 与 `workType`
 - [x] **2.3** 实现 `lib/models/work_log.dart`：包含 `abnormalityId` / `agentId` / `workType` / `success` / `isCriticalFail` / `peBoxGained` / `createdAt`，作为工作执行的独立记录
-- [ ] **2.4** 实现 `lib/models/agent.dart`（HP、`maxHp` 默认 100、四维 `aptitude`、装备槽 `equippedEgoIds`）与 `lib/models/ego_gear.dart`（包含 `bonusStats.suppression` 用于镇压加成）
+- [x] **2.4** 实现 `lib/models/agent.dart`（HP、`maxHp` 默认 100、四维 `aptitude`、装备槽 `equippedEgoIds`）与 `lib/models/ego_gear.dart`（包含 `bonusStats.suppression` 用于镇压加成）
 - [ ] **2.5** 实现 `lib/models/daily_state.dart`，管理每日提取候选与解锁配额（按自然日 0:00 重置）
 - [ ] **2.6** 编写 `assets/presets/abnormalities.json`，包含「一罪与百善」与「老妇人」两条初始预设（字段需与 AGENT.md 6.1 / 6.2 完全对齐：`requiredResonance` / `escapeDrain` / 完整 `workReactions` 含 success 与 fail），并实现解析加载逻辑
 
