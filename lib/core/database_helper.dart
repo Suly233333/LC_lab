@@ -29,6 +29,7 @@ class DatabaseHelper {
   // app_state KV keys
   static const String kPeBoxBalance = 'pe_box_balance';
   static const String kDailyState = 'daily_state';
+  static const String kLastQliphothScan = 'last_qliphoth_scan';
 
   Database? _db;
 
