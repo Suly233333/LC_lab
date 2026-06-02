@@ -191,17 +191,19 @@ assets/abnormalities/portraits/O-03-03.png    # 详情立绘
 
 | 用途 | 色值 |
 | ---- | ---- |
-| 主背景 Background | `#1A2A3A` 深蓝 |
-| 主色 / 强调 Primary | `#6E8AA6` 工业蓝灰 |
-| 次级表面 Surface | `#233447` 深蓝灰 |
+| 主背景 Background | `#0F1620` 近黑 |
+| 主色 / 强调 Primary | `#2D7DF6` 经典蓝 |
+| 次级表面 Surface | `#1B2330` 深灰 |
 | 警告 / 活跃 Alert | `#E53935` 警报红 |
+| 主文字 onBackground | `#F4F6FA` 近白 |
 
 视觉语言：
-- 全局 `LCorpGridBackground` 蓝灰网格底
-- `LCorpButton` 方角静态按钮（点击 ripple 反馈，无持续动画）
-- `CautionOverlay` 警报红 / 深蓝斜纹机密遮盖板
-- `QliphothCounterWidget` 分段式 LED 风格，归零红色闪烁
-- `BreachAlertOverlay` 全屏深蓝 / 警报红交替闪烁 + ERROR 像素抖动
+- 全局 12px 圆角面板（小标签 / 计数格 8px / 3px）
+- `LCorpGridBackground` 半透明蓝色网格底
+- `LCorpButton` 圆角静态按钮（点击 ripple 反馈）
+- `CautionOverlay` 警报红 / 近黑斜纹机密遮盖板
+- `QliphothCounterWidget` 分段式 LED 圆角格，归零红色闪烁
+- `BreachAlertOverlay` 全屏近黑 / 警报红交替闪烁 + ERROR 像素抖动
 
 > ⚠️ **核心禁令**：界面禁止出现任何代表共鸣度进度的百分比、数字或进度条组件。
 

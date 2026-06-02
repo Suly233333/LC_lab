@@ -72,6 +72,7 @@ class _ExtractionCeremonyWidgetState extends State<ExtractionCeremonyWidget>
       decoration: BoxDecoration(
         color: AppColors.background,
         border: Border.all(color: AppColors.primary, width: 2),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -93,8 +94,10 @@ class _ExtractionCeremonyWidgetState extends State<ExtractionCeremonyWidget>
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 border: Border.all(color: AppColors.primary, width: 1),
+                borderRadius: AppTheme.borderRadius,
               ),
-              child: ClipRect(
+              child: ClipRRect(
+                borderRadius: AppTheme.borderRadius,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [

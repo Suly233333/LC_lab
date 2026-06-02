@@ -148,10 +148,11 @@ class LCorpButton extends StatelessWidget {
         color: surfaceColor,
         shape: RoundedRectangleBorder(
           side: BorderSide(color: activeColor, width: 1),
-          borderRadius: BorderRadius.zero,
+          borderRadius: AppTheme.borderRadius,
         ),
         child: InkWell(
           onTap: onPressed,
+          borderRadius: AppTheme.borderRadius,
           splashColor: color.withValues(alpha: 0.18),
           highlightColor: color.withValues(alpha: 0.08),
           child: Padding(

@@ -73,6 +73,7 @@ class _QliphothCounterWidgetState extends State<QliphothCounterWidget>
               decoration: BoxDecoration(
                 color: lit ? base : base.withValues(alpha: 0.10),
                 border: Border.all(color: base, width: 0.6),
+                borderRadius: BorderRadius.circular(3),
               ),
             );
           },

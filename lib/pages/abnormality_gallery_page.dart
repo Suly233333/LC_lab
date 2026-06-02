@@ -140,9 +140,9 @@ class _CandidatePickerDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: AppColors.background,
       insetPadding: const EdgeInsets.all(20),
-      shape: const RoundedRectangleBorder(
-        side: BorderSide(color: AppColors.primary, width: 1),
-        borderRadius: BorderRadius.zero,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -194,9 +194,9 @@ class _AbnormalityCard extends StatelessWidget {
     final bool unlocked = abnormality.isUnlocked;
     return Material(
       color: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        side: BorderSide(color: AppColors.primary, width: 1),
-        borderRadius: BorderRadius.zero,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: InkWell(
         onTap: unlocked
@@ -256,9 +256,13 @@ class _AbnormalityCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.background,
                 border: Border.all(color: AppColors.primary, width: 1),
+                borderRadius: AppTheme.borderRadius,
               ),
-              child: AbnormalityImage(
-                assetPath: abnormality.iconAssetPath,
+              child: ClipRRect(
+                borderRadius: AppTheme.borderRadius,
+                child: AbnormalityImage(
+                  assetPath: abnormality.iconAssetPath,
+                ),
               ),
             ),
           ),

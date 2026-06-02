@@ -145,6 +145,7 @@ class _EgoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,6 +213,8 @@ class _EgoCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         border: Border.all(
                             color: AppColors.alert, width: 1),
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.smallRadius),
                       ),
                       child: Text(
                         '${e.key.toUpperCase()} +${e.value}',

@@ -143,8 +143,8 @@ class _BreachAlertOverlayState extends State<BreachAlertOverlay>
                       child: TextButton(
                         style: TextButton.styleFrom(
                           foregroundColor: fg,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppTheme.borderRadius,
                           ),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 10),

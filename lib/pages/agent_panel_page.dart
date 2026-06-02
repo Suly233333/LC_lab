@@ -99,6 +99,7 @@ class _AgentPanelPageState extends ConsumerState<AgentPanelPage> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,6 +124,7 @@ class _AgentPanelPageState extends ConsumerState<AgentPanelPage> {
                       horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     border: Border.all(color: AppColors.alert),
+                    borderRadius: BorderRadius.circular(AppTheme.smallRadius),
                   ),
                   child: const Text(
                     'INJURED',
@@ -186,6 +188,7 @@ class _AgentPanelPageState extends ConsumerState<AgentPanelPage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,6 +213,8 @@ class _AgentPanelPageState extends ConsumerState<AgentPanelPage> {
                       decoration: BoxDecoration(
                         border: Border.all(
                             color: AppColors.primary, width: 1),
+                        borderRadius: BorderRadius.circular(
+                            AppTheme.smallRadius),
                       ),
                       child: Text(
                         '${e.key.toUpperCase()}  ${e.value}',
@@ -235,6 +240,7 @@ class _AgentPanelPageState extends ConsumerState<AgentPanelPage> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

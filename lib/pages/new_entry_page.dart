@@ -244,6 +244,7 @@ class _NewEntryPageState extends ConsumerState<NewEntryPage> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.alert),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,8 +323,11 @@ class _TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final BorderRadius radius =
+        BorderRadius.circular(AppTheme.cornerRadius);
     return InkWell(
       onTap: onTap,
+      borderRadius: radius,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
@@ -332,6 +336,7 @@ class _TagChip extends StatelessWidget {
             color: active ? AppColors.primary : AppColors.primary,
             width: 1,
           ),
+          borderRadius: radius,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -375,13 +380,18 @@ class _AttachmentThumb extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.primary, width: 1),
             color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppTheme.smallRadius),
           ),
-          child: file.existsSync()
-              ? Image.file(file, fit: BoxFit.cover)
-              : const Center(
-                  child: Icon(Icons.broken_image,
-                      color: AppColors.alert, size: 24),
-                ),
+          child: ClipRRect(
+            borderRadius:
+                BorderRadius.circular(AppTheme.smallRadius - 1),
+            child: file.existsSync()
+                ? Image.file(file, fit: BoxFit.cover)
+                : const Center(
+                    child: Icon(Icons.broken_image,
+                        color: AppColors.alert, size: 24),
+                  ),
+          ),
         ),
         Positioned(
           right: -2,

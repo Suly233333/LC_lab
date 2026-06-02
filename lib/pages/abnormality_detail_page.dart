@@ -123,6 +123,7 @@ class _AbnormalityDetailPageState
                 const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.alert, width: 1),
+              borderRadius: BorderRadius.circular(AppTheme.smallRadius),
             ),
             child: const Text(
               'NEGATIVE',
@@ -146,11 +147,15 @@ class _AbnormalityDetailPageState
       decoration: BoxDecoration(
         color: AppColors.background,
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
-      child: AbnormalityImage(
-        assetPath: a.portraitAssetPath,
-        iconSize: 96,
-        fit: BoxFit.contain,
+      child: ClipRRect(
+        borderRadius: AppTheme.borderRadius,
+        child: AbnormalityImage(
+          assetPath: a.portraitAssetPath,
+          iconSize: 96,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
@@ -161,6 +166,7 @@ class _AbnormalityDetailPageState
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,6 +203,7 @@ class _AbnormalityDetailPageState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,6 +283,7 @@ class _AbnormalityDetailPageState
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: tone, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,6 +336,7 @@ class _AbnormalityDetailPageState
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.alert, width: 2),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -132,12 +132,13 @@ class _LogCard extends ConsumerWidget {
     final String preview = _previewOf(entry.content);
     return Material(
       color: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        side: BorderSide(color: AppColors.primary, width: 1),
-        borderRadius: BorderRadius.zero,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: AppColors.primary, width: 1),
+        borderRadius: AppTheme.borderRadius,
       ),
       child: InkWell(
         onLongPress: () => _confirmDelete(context, ref, entry),
+        borderRadius: AppTheme.borderRadius,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -204,9 +205,9 @@ class _LogCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: const RoundedRectangleBorder(
-          side: BorderSide(color: AppColors.primary, width: 1),
-          borderRadius: BorderRadius.zero,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: AppColors.primary, width: 1),
+          borderRadius: AppTheme.borderRadius,
         ),
         title: const TerminalText('// DELETE OBSERVATION?',
             fontSize: 16,

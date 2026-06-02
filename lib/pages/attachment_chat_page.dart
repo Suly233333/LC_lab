@@ -289,6 +289,7 @@ class _Bubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: bg,
                 border: Border.all(color: border, width: 1),
+                borderRadius: BorderRadius.circular(AppTheme.cornerRadius),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
