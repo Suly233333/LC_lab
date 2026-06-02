@@ -123,6 +123,24 @@ class AbnormalityRepository {
     );
   }
 
+  /// 设置出逃状态。
+  Future<void> setEscapeState(
+    String id, {
+    required bool isEscaped,
+    DateTime? escapeStartedAt,
+  }) async {
+    final Database db = await _helper.database;
+    await db.update(
+      DatabaseHelper.tableAbnormalities,
+      {
+        'isEscaped': isEscaped ? 1 : 0,
+        'escapeStartedAt': escapeStartedAt?.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   // ---------- PE Box 全局余额（app_state KV） ----------
 
   /// 读取 PE Box 全局余额，缺省返回 0。
@@ -179,6 +197,8 @@ class AbnormalityRepository {
         'breachType': a.breachType.name,
         'penaltyAmount': a.penaltyAmount,
         'escapeDrain': a.escapeDrain,
+        'isEscaped': a.isEscaped ? 1 : 0,
+        'escapeStartedAt': a.escapeStartedAt?.toIso8601String(),
         'description': a.description,
         'manageNote': a.manageNote,
         'workReactions': json.encode(a.workReactions),
@@ -203,6 +223,8 @@ class AbnormalityRepository {
       'breachType': row['breachType'],
       'penaltyAmount': row['penaltyAmount'],
       'escapeDrain': row['escapeDrain'],
+      'isEscaped': (row['isEscaped'] as int? ?? 0) != 0,
+      'escapeStartedAt': row['escapeStartedAt'],
       'description': row['description'],
       'manageNote': row['manageNote'],
       'workReactions': json.decode(row['workReactions'] as String),

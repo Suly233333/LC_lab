@@ -63,6 +63,12 @@ class Abnormality {
   /// 当 [breachType] = escape 时每分钟扣除的 PE Box。
   final int? escapeDrain;
 
+  /// 是否处于出逃状态（仅 BreachType.escape 可达）。
+  bool isEscaped;
+
+  /// 出逃开始时间（用于 30 分钟自动返回 / 每分钟扣 PE Box）。
+  DateTime? escapeStartedAt;
+
   /// 解锁前需遮盖的描述。
   final String description;
 
@@ -91,6 +97,8 @@ class Abnormality {
     required this.breachType,
     this.penaltyAmount,
     this.escapeDrain,
+    this.isEscaped = false,
+    this.escapeStartedAt,
     required this.description,
     required this.manageNote,
     required this.workReactions,
@@ -125,6 +133,10 @@ class Abnormality {
       breachType: _parseBreach(json['breachType'] as String),
       penaltyAmount: (json['penaltyAmount'] as num?)?.toInt(),
       escapeDrain: (json['escapeDrain'] as num?)?.toInt(),
+      isEscaped: (json['isEscaped'] as bool?) ?? false,
+      escapeStartedAt: json['escapeStartedAt'] == null
+          ? null
+          : DateTime.parse(json['escapeStartedAt'] as String),
       description: json['description'] as String,
       manageNote: json['manageNote'] as String,
       workReactions: (json['workReactions'] as Map<dynamic, dynamic>)
@@ -151,6 +163,8 @@ class Abnormality {
         'breachType': breachType.name,
         'penaltyAmount': penaltyAmount,
         'escapeDrain': escapeDrain,
+        'isEscaped': isEscaped,
+        'escapeStartedAt': escapeStartedAt?.toIso8601String(),
         'description': description,
         'manageNote': manageNote,
         'workReactions': workReactions,

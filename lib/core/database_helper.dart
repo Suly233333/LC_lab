@@ -16,7 +16,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String dbFileName = 'lc_lab.db';
-  static const int dbVersion = 1;
+  static const int dbVersion = 2;
 
   // 表名
   static const String tableAbnormalities = 'abnormalities';
@@ -48,7 +48,21 @@ class DatabaseHelper {
       fullPath,
       version: dbVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // 出逃状态字段
+      await db.execute(
+        'ALTER TABLE $tableAbnormalities '
+        'ADD COLUMN isEscaped INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE $tableAbnormalities ADD COLUMN escapeStartedAt TEXT',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -73,6 +87,8 @@ class DatabaseHelper {
         breachType TEXT NOT NULL,
         penaltyAmount INTEGER,
         escapeDrain INTEGER,
+        isEscaped INTEGER NOT NULL DEFAULT 0,
+        escapeStartedAt TEXT,
         description TEXT NOT NULL,
         manageNote TEXT NOT NULL,
         workReactions TEXT NOT NULL

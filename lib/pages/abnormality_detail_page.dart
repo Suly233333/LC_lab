@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
 import '../models/abnormality.dart';
 import '../models/work_log.dart';
+import '../services/breach_service.dart';
 import '../services/work_service.dart';
 import '../state/app_providers.dart';
+import '../widgets/breach_alert_overlay.dart';
 import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
 import '../widgets/qliphoth_counter_widget.dart';
@@ -62,6 +64,10 @@ class _AbnormalityDetailPageState
                         _buildHeader(target),
                         const SizedBox(height: 12),
                         _buildStatusPanel(target),
+                        if (target.isEscaped) ...[
+                          const SizedBox(height: 12),
+                          _buildSuppressionPanel(target),
+                        ],
                         const SizedBox(height: 16),
                         _buildDescription(target),
                         const SizedBox(height: 20),
@@ -297,6 +303,118 @@ class _AbnormalityDetailPageState
     );
   }
 
+  Widget _buildSuppressionPanel(Abnormality a) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.alert, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '// CONTAINMENT BREACH — ESCAPE',
+            style: TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.alert,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '该异想体已脱离收容，每分钟扣除 ${a.escapeDrain ?? 0} PE Box。'
+            '可派遣员工执行镇压，或等待 30 分钟后自动返回。',
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.onBackground,
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: LCorpButton(
+                  label: 'SUPPRESS',
+                  height: 40,
+                  onPressed: _busy ? null : () => _suppress(a),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: LCorpButton(
+                  label: 'WAIT',
+                  height: 40,
+                  enableScanline: false,
+                  onPressed: _busy
+                      ? null
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('// MONITORING ESCAPE...'),
+                            ),
+                          );
+                        },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _suppress(Abnormality a) async {
+    setState(() => _busy = true);
+    try {
+      final SuppressionOutcome o = await ref
+          .read(breachServiceProvider)
+          .attemptSuppression(abnormalityId: a.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(o.success
+              ? '// SUPPRESSION SUCCESS  +${o.peBoxGained} PE'
+              : '// SUPPRESSION FAILED  HP ${o.hpDelta}'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('// $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _showBreachAlert(BreachEvent breach) async {
+    final BreachType t = breach.type;
+    final String title = t == BreachType.escape
+        ? 'CONTAINMENT BREACH — ESCAPE'
+        : (t == BreachType.penaltyBox
+            ? 'CONTAINMENT BREACH — PENALTY'
+            : 'CONTAINMENT INCIDENT');
+    final String desc = t == BreachType.escape
+        ? '${breach.abnormality.name} 已脱离收容。'
+        : (t == BreachType.penaltyBox
+            ? '${breach.abnormality.name} 触发惩罚，损失 ${breach.peBoxLost} PE Box。'
+            : '${breach.abnormality.name} 已重置。');
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      builder: (ctx) => BreachAlertOverlay(
+        title: title,
+        description: desc,
+        onAck: () => Navigator.of(ctx).pop(),
+      ),
+    );
+  }
+
   Future<void> _execute(Abnormality a, String workType) async {
     // 沟通工作：跳转聊天页（6.5）
     if (workType == WorkType.attachment) {
@@ -316,6 +434,9 @@ class _AbnormalityDetailPageState
           .performWork(abnormalityId: a.id, workType: workType);
       if (!mounted) return;
       setState(() => _lastOutcome = outcome);
+      if (outcome.breach != null) {
+        await _showBreachAlert(outcome.breach!);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -66,12 +66,12 @@
 
 - [x] **7.1** 开发 LED 风格逆卡巴拉计数器组件 `QliphothCounterWidget`，实时反映计数器变化
 - [x] **7.2** 实现突破警报 `BreachAlertOverlay`：全屏黑黄交替闪烁 + "ERROR"像素化抖动动效
-- [ ] **7.3** 根据 `breachType` 实现惩罚逻辑：
+- [x] **7.3** 根据 `breachType` 实现惩罚逻辑：
   - `none` → 仅重置计数器
   - `penaltyBox` → 立即扣除 `penaltyAmount`% 的 PE Box（PE Box clamp ≥ 0）
   - `escape` → 进入出逃状态，每分钟扣除 `escapeDrain` PE Box
-- [ ] **7.4** 实现出逃与镇压：主管可选镇压或不镇压；不镇压则 30 分钟后自动返回；镇压成功率 `clamp(Σ(equippedEgo.bonusStats[suppression] × 0.1) + 0.2, 0.1, 0.9)`，成功奖励 `floor(qliphothMax × 2)` PE Box，失败员工 HP -20（HP clamp ≥ 0）
-- [ ] **7.5** 实现员工受伤机制：HP 归零进入"受伤"状态无法工作，每小时自然恢复 10 HP（clamp 至 `maxHp`）
+- [x] **7.4** 实现出逃与镇压：主管可选镇压或不镇压；不镇压则 30 分钟后自动返回；镇压成功率 `clamp(Σ(equippedEgo.bonusStats[suppression] × 0.1) + 0.2, 0.1, 0.9)`，成功奖励 `floor(qliphothMax × 2)` PE Box，失败员工 HP -20（HP clamp ≥ 0）
+- [x] **7.5** 实现员工受伤机制：HP 归零进入"受伤"状态无法工作，每小时自然恢复 10 HP（clamp 至 `maxHp`）
 - [ ] **7.6** 实现 EGO 装备商店 `EgoShopPage`：PE Box 消费兑换装备，员工详情页支持穿脱
 
 ---

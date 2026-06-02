@@ -9,6 +9,7 @@ import '../models/abnormality.dart';
 import '../models/agent.dart';
 import '../models/work_log.dart';
 import '../state/app_providers.dart';
+import 'breach_service.dart';
 
 /// 工作执行结果，封装 UI 反馈所需的全部信息。
 class WorkOutcome {
@@ -22,6 +23,7 @@ class WorkOutcome {
     required this.successProbability,
     required this.workType,
     required this.abnormalityId,
+    this.breach,
   });
 
   final bool success;
@@ -35,6 +37,9 @@ class WorkOutcome {
   final double successProbability;
   final String workType;
   final String abnormalityId;
+
+  /// 本次工作引发的突破事件（若有）。
+  final BreachEvent? breach;
 
   bool get isNegativeBefore => false; // 仅作占位扩展位
 }
@@ -153,6 +158,12 @@ class WorkService {
     // 通知 UI 刷新
     await ref.read(abnormalitiesProvider.notifier).reload();
 
+    // 计数器归零分发突破事件（7.3）。
+    BreachEvent? breach;
+    if (newQliphoth == 0) {
+      breach = await ref.read(breachServiceProvider).maybeBreach(abn.id);
+    }
+
     return WorkOutcome(
       success: success,
       isCriticalFail: isCriticalFail,
@@ -163,6 +174,7 @@ class WorkService {
       successProbability: prob,
       workType: workType,
       abnormalityId: abn.id,
+      breach: breach,
     );
   }
 }

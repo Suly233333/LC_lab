@@ -8,6 +8,7 @@ import '../core/database_helper.dart';
 import '../core/work_log_repository.dart';
 import '../models/abnormality.dart';
 import '../state/app_providers.dart';
+import 'breach_service.dart';
 
 /// 8 小时未互动检测任务（Qliphoth Counter Decay）。
 ///
@@ -36,6 +37,8 @@ class QliphothScheduler {
   final Duration decayWindow;
 
   Timer? _timer;
+  Timer? _minuteTimer;
+  Timer? _hourTimer;
   bool _running = false;
 
   /// 启动定时扫描。多次调用安全（重复启动会被忽略）。
@@ -44,12 +47,30 @@ class QliphothScheduler {
     // 立即追赶一次。
     unawaited(scanOnce());
     _timer = Timer.periodic(scanInterval, (_) => scanOnce());
+
+    // 出逃巡检：每分钟扣 PE Box / 30 分钟自动返回。
+    _minuteTimer = Timer.periodic(const Duration(minutes: 1), (_) async {
+      try {
+        await ref.read(breachServiceProvider).tickEscape();
+      } catch (_) {}
+    });
+
+    // 员工 HP 自然恢复：每小时 +10。
+    _hourTimer = Timer.periodic(const Duration(hours: 1), (_) async {
+      try {
+        await ref.read(breachServiceProvider).healAgentsTick();
+      } catch (_) {}
+    });
   }
 
   /// 停止定时扫描。
   void stop() {
     _timer?.cancel();
     _timer = null;
+    _minuteTimer?.cancel();
+    _minuteTimer = null;
+    _hourTimer?.cancel();
+    _hourTimer = null;
   }
 
   /// 单次扫描：根据上次扫描时间与每个异想体的最近互动时间，
@@ -90,6 +111,11 @@ class QliphothScheduler {
         final int clamped = next < 0 ? 0 : next;
         await abnRepo.setQliphothCounter(a.id, clamped);
         changed = true;
+
+        // 8 小时窗口扣完后归零 → 触发突破。
+        if (clamped == 0) {
+          await ref.read(breachServiceProvider).maybeBreach(a.id);
+        }
       }
 
       await _writeLastScanAt(stamp);
