@@ -1,0 +1,66 @@
+[
+  {
+    "id": "O-03-03",
+    "name": "一罪与百善",
+    "grade": "ZAYIN",
+    "isInitial": true,
+    "breachType": "none",
+    "penaltyAmount": 0,
+    "escapeDrain": null,
+    "qliphothCounter": 3,
+    "qliphothMax": 3,
+    "featureTags": ["忏悔", "宽恕", "牺牲", "善意", "信仰", "自我审视"],
+    "workTypeWeights": {
+      "instinct": 0.5,
+      "insight": 1.0,
+      "attachment": 1.5,
+      "repression": 0.3
+    },
+    "requiredDays": 0,
+    "requiredResonance": 0,
+    "description": "一个巨大的漂浮骷髅，被荆棘冠冕缠绕，背负着沉重的十字架。它静静地倾听着每一个来到它面前的人的低语。",
+    "manageNote": "即便长时间不与其沟通，该异想体也不会产生任何攻击性行为。是所有新进员工学习管理流程的最佳对象。",
+    "workReactions": {
+      "instinct_success": "它对物质需求毫无反应，只是静静地漂浮。",
+      "instinct_fail": "它对物质需求毫无反应，依旧静静地漂浮，仿佛什么都没发生。",
+      "insight_success": "员工在整理档案时，仿佛听到了一阵微弱的祈祷声。",
+      "insight_fail": "员工试图整理档案，但骷髅只是沉默，没有任何回应。",
+      "attachment_success": "员工向它倾诉了内心的罪恶感，它闭上了眼。",
+      "attachment_fail": "员工试图靠近倾诉，但它似乎没有在听。",
+      "repression_success": "强行的压制命令似乎让冠冕上的荆棘收紧了一些。",
+      "repression_fail": "它没有反应。荆棘只是沉默地垂落。"
+    }
+  },
+  {
+    "id": "T-01-12",
+    "name": "老妇人",
+    "grade": "TETH",
+    "isInitial": false,
+    "breachType": "penaltyBox",
+    "penaltyAmount": 20,
+    "escapeDrain": null,
+    "qliphothCounter": 4,
+    "qliphothMax": 4,
+    "featureTags": ["孤独", "怀旧", "编织", "故事", "倾听", "琐碎", "耐心"],
+    "workTypeWeights": {
+      "instinct": 0.4,
+      "insight": 0.4,
+      "attachment": 0.9,
+      "repression": 0.1
+    },
+    "requiredDays": 3,
+    "requiredResonance": 45,
+    "description": "一个外表苍白、双眼漆黑的老妇人，始终坐在摇椅上不断编织。她渴望有人能坐下来听她讲那些陈旧的故事。",
+    "manageNote": "长时间忽视她会使逆卡巴拉计数器减少。计数器归零时，'孤独线团'将爆发并扣除 20% 的 PE Box 储备。",
+    "workReactions": {
+      "instinct_success": "摇椅有规律地发出'嘎吱、嘎吱'的声音，她似乎对物质供给感到一丝安慰。",
+      "instinct_fail": "摇椅的嘎吱声戛然而止，她对物质供给毫无兴趣。",
+      "insight_success": "员工试图理解她编织的花纹，隐约看出了某种古老的图案。",
+      "insight_fail": "员工试图理解她编织的花纹，但那些线永无止境且没有逻辑。",
+      "attachment_success": "她慈祥地拉起员工的手，开始讲述一个关于'很久以前'的故事。",
+      "attachment_fail": "她似乎没有注意到员工的靠近，继续低头编织。",
+      "repression_success": "员工的强制命令让她陷入令人不安的冰冷沉默，但她暂时服从了。",
+      "repression_fail": "员工的强制命令让她陷入令人不安的冰冷沉默，线团开始不安地颤动。"
+    }
+  }
+]
