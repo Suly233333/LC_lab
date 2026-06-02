@@ -27,7 +27,7 @@
 
 - [x] **3.1** 编写 `lib/core/database_helper.dart`，初始化并创建 `diary_entries`、`work_logs`、`abnormalities`、`agents`、`ego_inventory` 五张表
 - [x] **3.2** 实现异想体的 CRUD：解锁状态、`currentResonance`、`qliphothCounter`、`energyLevel`、PE Box 余额（全局）的持久化
-- [ ] **3.3** 实现日记条目与工作记录的存储，并支持按日期索引查询
+- [x] **3.3** 实现日记条目与工作记录的存储，并支持按日期索引查询
 
 ---
 
