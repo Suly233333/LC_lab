@@ -5,7 +5,7 @@
 ## 第一阶段：项目初始化与 UI 基建
 
 - [x] **1.1** 执行 `flutter create --platforms=android`，在 `pubspec.yaml` 中引入依赖：`flutter_riverpod`, `sqflite`, `path`, `intl`, `image_picker`, `permission_handler`, `path_provider`
-- [ ] **1.2** 在 `android/app/build.gradle` 中设置 `minSdkVersion 26`、`targetSdkVersion` 跟随 Flutter 默认；在 `AndroidManifest.xml` 申请权限：`RECORD_AUDIO` / `READ_MEDIA_IMAGES`
+- [x] **1.2** 在 `android/app/build.gradle` 中设置 `minSdkVersion 26`、`targetSdkVersion` 跟随 Flutter 默认；在 `AndroidManifest.xml` 申请权限：`RECORD_AUDIO` / `READ_MEDIA_IMAGES`
 - [ ] **1.3** 在 `lib/core/theme.dart` 中定义 `AppTheme`：背景色 `#121212`，主强调色 `#FFD700`，次背景 `#262626`，警告色 `#FF8F00`
 - [ ] **1.4** 开发 `LCorpGridBackground` 组件，在全局背景上渲染极细暗黄网格线
 - [ ] **1.5** 配置 `TerminalText` 等宽字体样式，封装带扫描线动效的 `LCorpButton`
