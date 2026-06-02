@@ -3,28 +3,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
 import '../models/abnormality.dart';
+import '../models/work_log.dart';
+import '../services/work_service.dart';
 import '../state/app_providers.dart';
+import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
+import 'attachment_chat_page.dart';
 
-/// 异想体详情页（占位实现）。
-///
-/// 6.3 工作交互界面将在此页中接入四种工作按钮、能量条、计数器组件等。
-class AbnormalityDetailPage extends ConsumerWidget {
+/// 异想体详情页 / 工作控制台。
+class AbnormalityDetailPage extends ConsumerStatefulWidget {
   const AbnormalityDetailPage({super.key, required this.abnormalityId});
 
   final String abnormalityId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AbnormalityDetailPage> createState() =>
+      _AbnormalityDetailPageState();
+}
+
+class _AbnormalityDetailPageState
+    extends ConsumerState<AbnormalityDetailPage> {
+  WorkOutcome? _lastOutcome;
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
     final AsyncValue<List<Abnormality>> async =
         ref.watch(abnormalitiesProvider);
 
-    final Abnormality? target = async.maybeWhen(
+    final Abnormality? target = async.whenOrNull(
       data: (list) => list.firstWhere(
-        (a) => a.id == abnormalityId,
+        (a) => a.id == widget.abnormalityId,
         orElse: () => list.first,
       ),
-      orElse: () => null,
     );
 
     return Scaffold(
@@ -35,65 +46,355 @@ class AbnormalityDetailPage extends ConsumerWidget {
       body: Stack(
         children: [
           const Positioned.fill(child: LCorpGridBackground()),
-          if (target == null)
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${target.id}  /  ${target.grade}',
-                    style: const TextStyle(
-                      fontFamily: AppTheme.monoFontFamily,
-                      color: AppColors.alert,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    target.description,
-                    style: const TextStyle(
-                      fontFamily: AppTheme.monoFontFamily,
-                      color: AppColors.onBackground,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary, width: 1),
-                      color: AppColors.surface,
-                    ),
-                    child: Text(
-                      target.manageNote,
-                      style: const TextStyle(
-                        fontFamily: AppTheme.monoFontFamily,
-                        color: AppColors.hint,
-                        fontSize: 12,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    '// WORK CONSOLE — TBD',
-                    style: TextStyle(
-                      fontFamily: AppTheme.monoFontFamily,
+          Positioned.fill(
+            child: target == null
+                ? const Center(
+                    child: CircularProgressIndicator(
                       color: AppColors.primary,
-                      letterSpacing: 1.5,
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(target),
+                        const SizedBox(height: 12),
+                        _buildStatusPanel(target),
+                        const SizedBox(height: 16),
+                        _buildDescription(target),
+                        const SizedBox(height: 20),
+                        _buildWorkConsole(target),
+                        if (_lastOutcome != null) ...[
+                          const SizedBox(height: 20),
+                          _buildReactionPanel(_lastOutcome!),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeader(Abnormality a) {
+    return Row(
+      children: [
+        Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          color: AppColors.alert,
+          child: Text(
+            a.grade,
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.background,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          a.id,
+          style: const TextStyle(
+            fontFamily: AppTheme.monoFontFamily,
+            color: AppColors.hint,
+            fontSize: 12,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const Spacer(),
+        if (a.isNegative)
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.alert, width: 1),
+            ),
+            child: const Text(
+              'NEGATIVE',
+              style: TextStyle(
+                fontFamily: AppTheme.monoFontFamily,
+                color: AppColors.alert,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatusPanel(Abnormality a) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.primary, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '// CONTAINMENT STATUS',
+            style: TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.alert,
+              fontSize: 11,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _LedBar(
+            label: 'ENERGY',
+            current: a.energyLevel,
+            max: 100,
+            segments: 10,
+            color: a.isNegative ? AppColors.alert : AppColors.primary,
+          ),
+          const SizedBox(height: 6),
+          _LedBar(
+            label: 'QLIPHOTH',
+            current: a.qliphothCounter,
+            max: a.qliphothMax,
+            segments: a.qliphothMax,
+            color: AppColors.alert,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescription(Abnormality a) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            a.description,
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.onBackground,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            color: AppColors.background,
+            child: Text(
+              a.manageNote,
+              style: const TextStyle(
+                fontFamily: AppTheme.monoFontFamily,
+                color: AppColors.hint,
+                fontSize: 12,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkConsole(Abnormality a) {
+    final List<_WorkAction> actions = [
+      _WorkAction(WorkType.instinct, 'INSTINCT', '本能'),
+      _WorkAction(WorkType.insight, 'INSIGHT', '洞察'),
+      _WorkAction(WorkType.attachment, 'ATTACHMENT', '沟通'),
+      _WorkAction(WorkType.repression, 'REPRESSION', '压迫'),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '// WORK CONSOLE',
+          style: TextStyle(
+            fontFamily: AppTheme.monoFontFamily,
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 2.4,
+          children: actions
+              .map(
+                (act) => LCorpButton(
+                  label: '${act.label}\n${act.zhLabel}',
+                  onPressed: _busy ? null : () => _execute(a, act.id),
+                  height: 56,
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReactionPanel(WorkOutcome o) {
+    final Color tone = o.success ? AppColors.primary : AppColors.alert;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: tone, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                o.success
+                    ? '// WORK SUCCEEDED'
+                    : (o.isCriticalFail
+                        ? '// CRITICAL FAILURE'
+                        : '// WORK FAILED'),
+                style: TextStyle(
+                  fontFamily: AppTheme.monoFontFamily,
+                  color: tone,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const Spacer(),
+              if (o.peBoxGained > 0)
+                Text(
+                  '+${o.peBoxGained} PE',
+                  style: const TextStyle(
+                    fontFamily: AppTheme.monoFontFamily,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            o.reaction,
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.onBackground,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _execute(Abnormality a, String workType) async {
+    // 沟通工作：跳转聊天页（6.5）
+    if (workType == WorkType.attachment) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) =>
+              AttachmentChatPage(abnormalityId: a.id),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      final WorkOutcome outcome = await ref
+          .read(workServiceProvider)
+          .performWork(abnormalityId: a.id, workType: workType);
+      if (!mounted) return;
+      setState(() => _lastOutcome = outcome);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('// $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
+class _WorkAction {
+  const _WorkAction(this.id, this.label, this.zhLabel);
+  final String id;
+  final String label;
+  final String zhLabel;
+}
+
+/// 分段式 LED 进度条（用于能量值与逆卡巴拉计数器）。
+class _LedBar extends StatelessWidget {
+  const _LedBar({
+    required this.label,
+    required this.current,
+    required this.max,
+    required this.segments,
+    required this.color,
+  });
+
+  final String label;
+  final int current;
+  final int max;
+  final int segments;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final int safeMax = max <= 0 ? 1 : max;
+    final int safeSegments = segments <= 0 ? 1 : segments;
+    final double progress = (current / safeMax).clamp(0.0, 1.0);
+    final int litCount = (progress * safeSegments).round();
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 84,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Row(
+            children: List.generate(safeSegments, (i) {
+              final bool lit = i < litCount;
+              return Expanded(
+                child: Container(
+                  height: 14,
+                  margin: EdgeInsets.only(
+                    right: i == safeSegments - 1 ? 0 : 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        lit ? color : color.withValues(alpha: 0.10),
+                    border: Border.all(color: color, width: 0.6),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 }
