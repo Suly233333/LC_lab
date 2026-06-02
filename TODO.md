@@ -65,7 +65,7 @@
 ## 第七阶段：突破机制、出逃镇压与 EGO 商店
 
 - [x] **7.1** 开发 LED 风格逆卡巴拉计数器组件 `QliphothCounterWidget`，实时反映计数器变化
-- [ ] **7.2** 实现突破警报 `BreachAlertOverlay`：全屏黑黄交替闪烁 + "ERROR"像素化抖动动效
+- [x] **7.2** 实现突破警报 `BreachAlertOverlay`：全屏黑黄交替闪烁 + "ERROR"像素化抖动动效
 - [ ] **7.3** 根据 `breachType` 实现惩罚逻辑：
   - `none` → 仅重置计数器
   - `penaltyBox` → 立即扣除 `penaltyAmount`% 的 PE Box（PE Box clamp ≥ 0）
