@@ -72,7 +72,7 @@
   - `escape` → 进入出逃状态，每分钟扣除 `escapeDrain` PE Box
 - [x] **7.4** 实现出逃与镇压：主管可选镇压或不镇压；不镇压则 30 分钟后自动返回；镇压成功率 `clamp(Σ(equippedEgo.bonusStats[suppression] × 0.1) + 0.2, 0.1, 0.9)`，成功奖励 `floor(qliphothMax × 2)` PE Box，失败员工 HP -20（HP clamp ≥ 0）
 - [x] **7.5** 实现员工受伤机制：HP 归零进入"受伤"状态无法工作，每小时自然恢复 10 HP（clamp 至 `maxHp`）
-- [ ] **7.6** 实现 EGO 装备商店 `EgoShopPage`：PE Box 消费兑换装备，员工详情页支持穿脱
+- [x] **7.6** 实现 EGO 装备商店 `EgoShopPage`：PE Box 消费兑换装备，员工详情页支持穿脱
 
 ---
 

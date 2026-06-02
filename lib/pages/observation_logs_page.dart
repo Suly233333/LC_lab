@@ -8,6 +8,7 @@ import '../state/app_providers.dart';
 import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
 import 'abnormality_gallery_page.dart';
+import 'agent_panel_page.dart';
 import 'new_entry_page.dart';
 
 /// 观测日志列表页（Observation Logs）。
@@ -27,6 +28,15 @@ class ObservationLogsPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('OBSERVATION LOGS'),
         actions: [
+          IconButton(
+            tooltip: 'AGENT PANEL',
+            icon: const Icon(Icons.account_circle_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AgentPanelPage(),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: 'ABNORMALITY GALLERY',
             icon: const Icon(Icons.visibility_outlined),

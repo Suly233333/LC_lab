@@ -9,6 +9,7 @@ import '../models/abnormality.dart';
 import '../models/agent.dart';
 import '../models/ego_gear.dart';
 import '../state/app_providers.dart';
+import 'ego_shop_service.dart' show egoRepositoryProvider;
 import 'work_service.dart' show agentRepositoryProvider;
 
 /// 突破事件结果（供 UI 展示警报）。
@@ -241,9 +242,8 @@ class BreachService {
   }
 
   Future<List<EgoGear>> _resolveEquippedEgo(Agent agent) async {
-    // EGO 商店上线后接 ego_inventory 仓库。
-    // 为兼容当前阶段，此处返回空列表（即镇压基础成功率 20%）。
-    return const <EgoGear>[];
+    if (agent.equippedEgoIds.isEmpty) return const <EgoGear>[];
+    return ref.read(egoRepositoryProvider).getMany(agent.equippedEgoIds);
   }
 
   int _hoursSinceLastHeal(DateTime now) {

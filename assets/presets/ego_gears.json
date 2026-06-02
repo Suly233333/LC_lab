@@ -1,0 +1,40 @@
+[
+  {
+    "id": "EGO-001",
+    "name": "纸折十字 / Paper Cross",
+    "description": "一件由档案纸折成的简陋十字。带来一丝信仰，让镇压更有底气。",
+    "cost": 60,
+    "bonusStats": {
+      "suppression": 1
+    }
+  },
+  {
+    "id": "EGO-002",
+    "name": "灰针外套 / Gray Needle Coat",
+    "description": "针脚密布的厚外套，能挡下出逃异想体的攻击。",
+    "cost": 100,
+    "bonusStats": {
+      "suppression": 2,
+      "maxHp": 10
+    }
+  },
+  {
+    "id": "EGO-003",
+    "name": "守夜手套 / Vigil Gloves",
+    "description": "提升处理本能与压迫工作的稳定性。",
+    "cost": 80,
+    "bonusStats": {
+      "instinct": 1,
+      "repression": 1
+    }
+  },
+  {
+    "id": "EGO-004",
+    "name": "倾听者耳环 / Listener Earring",
+    "description": "更敏锐地听见异想体的低语。",
+    "cost": 80,
+    "bonusStats": {
+      "attachment": 2
+    }
+  }
+]
