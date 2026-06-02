@@ -8,6 +8,7 @@ import '../services/work_service.dart';
 import '../state/app_providers.dart';
 import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
+import '../widgets/qliphoth_counter_widget.dart';
 import 'attachment_chat_page.dart';
 
 /// 异想体详情页 / 工作控制台。
@@ -157,12 +158,9 @@ class _AbnormalityDetailPageState
             color: a.isNegative ? AppColors.alert : AppColors.primary,
           ),
           const SizedBox(height: 6),
-          _LedBar(
-            label: 'QLIPHOTH',
+          QliphothCounterWidget(
             current: a.qliphothCounter,
             max: a.qliphothMax,
-            segments: a.qliphothMax,
-            color: AppColors.alert,
           ),
         ],
       ),
