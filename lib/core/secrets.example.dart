@@ -11,6 +11,6 @@ class Secrets {
   /// 共鸣度匹配使用的模型；建议低成本 flash 档。
   static const String glmResonanceModel = 'glm-4-flash';
 
-  /// 沟通对话使用的模型；建议更强一些以支持人格扮演。
-  static const String glmChatModel = 'glm-4-flash';
+  /// 沟通对话使用的模型；建议使用 CharGLM 系列以增强人格一致性。
+  static const String glmChatModel = 'charglm-4';
 }

@@ -31,7 +31,8 @@ abstract class AttachmentService {
   String? maybeAskQuestion({required Abnormality abnormality});
 }
 
-/// GLM 实现：为每个异想体构造专属 system prompt，让模型严格扮演。
+/// CharGLM 实现：为每个异想体构造专属 system prompt + meta 角色信息，
+/// 让模型严格扮演。
 class GlmAttachmentService implements AttachmentService {
   GlmAttachmentService({GlmClient? client, String? model, Random? random})
       : _client = client ?? GlmClient(),
@@ -41,6 +42,14 @@ class GlmAttachmentService implements AttachmentService {
   final GlmClient _client;
   final String _model;
   final Random _random;
+
+  /// 玩家在游戏中的固定身份。
+  static const String _userName = '主管';
+  static const String _userInfo =
+      '脑叶公司（Lobotomy Corporation）的主管，负责异想体的收容与管理工作。'
+      '态度冷静、克制，正在与该异想体进行 attachment（沟通）工作。';
+
+  bool get _isCharGlm => _model.toLowerCase().startsWith('charglm');
 
   String _systemPromptFor(Abnormality a) {
     final String tags = a.featureTags.join('、');
@@ -78,14 +87,38 @@ ${reactionSamples.toString()}
 ''';
   }
 
+  /// CharGLM 专用 meta：把异想体设定结构化注入。
+  Map<String, dynamic> _metaFor(Abnormality a) {
+    final String tags = a.featureTags.join('、');
+    final String reactions =
+        a.workReactions.entries.map((e) => '${e.key}: ${e.value}').join(' | ');
+    final String botInfo =
+        '${a.name}（${a.id} / ${a.grade}）。${a.description} '
+        '管理备注：${a.manageNote} '
+        '语义特征：$tags。'
+        '语气与行为参考样本：$reactions。'
+        '严禁透露共鸣度数值；不要替主管发言；保持人格不要破戒。';
+    return {
+      'bot_name': a.name,
+      'bot_info': botInfo,
+      'user_name': _userName,
+      'user_info': _userInfo,
+    };
+  }
+
   @override
   Future<String> respond({
     required Abnormality abnormality,
     required List<AttachmentTurn> history,
   }) async {
-    final List<GlmMessage> msgs = <GlmMessage>[
-      GlmMessage(role: 'system', content: _systemPromptFor(abnormality)),
-    ];
+    final List<GlmMessage> msgs = <GlmMessage>[];
+
+    // CharGLM 推荐用 meta 承载角色信息；通用 GLM 则在 system prompt 注入。
+    if (!_isCharGlm) {
+      msgs.add(
+        GlmMessage(role: 'system', content: _systemPromptFor(abnormality)),
+      );
+    }
     for (final AttachmentTurn t in history) {
       msgs.add(GlmMessage(
         role: t.fromUser ? 'user' : 'assistant',
@@ -96,6 +129,7 @@ ${reactionSamples.toString()}
       model: _model,
       temperature: 0.85,
       messages: msgs,
+      meta: _isCharGlm ? _metaFor(abnormality) : null,
     );
     return reply.trim().isEmpty ? '（它沉默着，没有回应。）' : reply.trim();
   }

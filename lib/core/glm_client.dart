@@ -35,12 +35,15 @@ class GlmClient {
   ///
   /// [messages] 含 system / user / assistant 角色；
   /// [temperature] 控制随机性；
-  /// [responseFormat] 可选 `{"type":"json_object"}` 强制 JSON 输出。
+  /// [responseFormat] 可选 `{"type":"json_object"}` 强制 JSON 输出；
+  /// [meta] 仅 CharGLM 系列支持，含 `bot_info` / `bot_name` /
+  /// `user_info` / `user_name` 字段，可显著增强角色一致性。
   Future<String> chat({
     required String model,
     required List<GlmMessage> messages,
     double temperature = 0.7,
     Map<String, dynamic>? responseFormat,
+    Map<String, dynamic>? meta,
   }) async {
     final Map<String, dynamic> payload = {
       'model': model,
@@ -49,6 +52,9 @@ class GlmClient {
     };
     if (responseFormat != null) {
       payload['response_format'] = responseFormat;
+    }
+    if (meta != null) {
+      payload['meta'] = meta;
     }
 
     final http.Response resp = await _http
