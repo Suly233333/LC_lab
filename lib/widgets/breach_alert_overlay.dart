@@ -1,173 +1,112 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 
-/// 突破警报全屏遮罩。
+/// 突破事件提示卡片。
 ///
-/// 表现：
-/// - 全屏背景在黑 / 黄之间快速交替闪烁；
-/// - 中央 "ERROR" 像素化文字带随机抖动；
-/// - 下方显示突破描述与确认按钮（[onAck]）。
+/// 仅用于"出逃（escape）"等需要主管介入的事件。
+/// 风格克制：无闪烁、无抖动；居中卡片，警报红描边 + 醒目标题，
+/// 配合 [onAck] 关闭。其他不需要介入的突破（none / penaltyBox）
+/// 应改用 SnackBar 短提示，不要弹此组件。
 ///
 /// 用法：
 /// ```dart
 /// showDialog(
 ///   context: context,
-///   barrierColor: Colors.transparent,
 ///   builder: (_) => BreachAlertOverlay(
 ///     title: 'CONTAINMENT BREACH',
-///     description: '“一罪与百善” 已重置。',
+///     description: '“老妇人” 已脱离收容。',
 ///     onAck: () => Navigator.of(context).pop(),
 ///   ),
 /// );
 /// ```
-class BreachAlertOverlay extends StatefulWidget {
+class BreachAlertOverlay extends StatelessWidget {
   const BreachAlertOverlay({
     super.key,
     required this.title,
     required this.description,
     required this.onAck,
     this.acknowledgeLabel = 'ACKNOWLEDGE',
-    this.flashDuration = const Duration(milliseconds: 220),
-    this.shakeDuration = const Duration(milliseconds: 90),
   });
 
   final String title;
   final String description;
   final VoidCallback onAck;
   final String acknowledgeLabel;
-  final Duration flashDuration;
-  final Duration shakeDuration;
-
-  @override
-  State<BreachAlertOverlay> createState() => _BreachAlertOverlayState();
-}
-
-class _BreachAlertOverlayState extends State<BreachAlertOverlay>
-    with TickerProviderStateMixin {
-  late final AnimationController _flash;
-  late final AnimationController _shake;
-  final Random _rng = Random();
-
-  @override
-  void initState() {
-    super.initState();
-    _flash = AnimationController(vsync: this, duration: widget.flashDuration)
-      ..repeat(reverse: true);
-    _shake = AnimationController(vsync: this, duration: widget.shakeDuration)
-      ..repeat();
-  }
-
-  @override
-  void dispose() {
-    _flash.dispose();
-    _shake.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _flash,
-      builder: (context, child) {
-        final bool yellowPhase = _flash.value > 0.5;
-        final Color bg =
-            yellowPhase ? AppColors.cautionStripe : AppColors.background;
-        final Color fg =
-            yellowPhase ? AppColors.background : AppColors.alert;
-        return Material(
-          color: bg,
-          child: SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _shake,
-                      builder: (_, _) {
-                        final double dx = (_rng.nextDouble() - 0.5) * 6;
-                        final double dy = (_rng.nextDouble() - 0.5) * 6;
-                        return Transform.translate(
-                          offset: Offset(dx, dy),
-                          child: Text(
-                            'ERROR',
-                            style: TextStyle(
-                              fontFamily: AppTheme.monoFontFamily,
-                              color: fg,
-                              fontSize: 64,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 8.0,
-                              height: 1.0,
-                            ),
-                          ),
-                        );
-                      },
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 80),
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: AppColors.alert, width: 1.5),
+        borderRadius: AppTheme.borderRadius,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppColors.alert,
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: AppTheme.monoFontFamily,
+                      color: AppColors.alert,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 1.2,
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
-                      color: fg,
-                      child: Text(
-                        widget.title.toUpperCase(),
-                        style: TextStyle(
-                          fontFamily: AppTheme.monoFontFamily,
-                          color: bg,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.5,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      widget.description,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppTheme.monoFontFamily,
-                        color: fg,
-                        fontSize: 13,
-                        height: 1.5,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: fg, width: 2),
-                      ),
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: fg,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppTheme.borderRadius,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 10),
-                        ),
-                        onPressed: widget.onAck,
-                        child: Text(
-                          widget.acknowledgeLabel,
-                          style: TextStyle(
-                            fontFamily: AppTheme.monoFontFamily,
-                            color: fg,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              description,
+              style: const TextStyle(
+                fontFamily: AppTheme.monoFontFamily,
+                color: AppColors.onBackground,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.borderRadius,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 18, vertical: 10),
+                ),
+                onPressed: onAck,
+                child: Text(
+                  acknowledgeLabel,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.monoFontFamily,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

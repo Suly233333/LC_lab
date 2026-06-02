@@ -421,23 +421,24 @@ class _AbnormalityDetailPageState
 
   Future<void> _showBreachAlert(BreachEvent breach) async {
     final BreachType t = breach.type;
-    final String title = t == BreachType.escape
-        ? 'CONTAINMENT BREACH — ESCAPE'
-        : (t == BreachType.penaltyBox
-            ? 'CONTAINMENT BREACH — PENALTY'
-            : 'CONTAINMENT INCIDENT');
-    final String desc = t == BreachType.escape
-        ? '${breach.abnormality.name} 已脱离收容。'
-        : (t == BreachType.penaltyBox
-            ? '${breach.abnormality.name} 触发惩罚，损失 ${breach.peBoxLost} PE Box。'
-            : '${breach.abnormality.name} 已重置。');
+
+    // 不需要主管介入的事件 → 仅底部短提示，不弹卡片
+    if (t != BreachType.escape) {
+      final String msg = t == BreachType.penaltyBox
+          ? '// ${breach.abnormality.name} 触发惩罚，损失 ${breach.peBoxLost} PE Box'
+          : '// ${breach.abnormality.name} 计数器已重置';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
+      return;
+    }
+
+    // 仅出逃事件弹卡片提示
     await showDialog<void>(
       context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.transparent,
       builder: (ctx) => BreachAlertOverlay(
-        title: title,
-        description: desc,
+        title: 'CONTAINMENT BREACH — ESCAPE',
+        description: '${breach.abnormality.name} 已脱离收容。',
         onAck: () => Navigator.of(ctx).pop(),
       ),
     );
