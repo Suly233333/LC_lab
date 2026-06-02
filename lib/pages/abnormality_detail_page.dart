@@ -7,6 +7,7 @@ import '../models/work_log.dart';
 import '../services/breach_service.dart';
 import '../services/work_service.dart';
 import '../state/app_providers.dart';
+import '../widgets/abnormality_image.dart';
 import '../widgets/breach_alert_overlay.dart';
 import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
@@ -62,6 +63,8 @@ class _AbnormalityDetailPageState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeader(target),
+                        const SizedBox(height: 12),
+                        _buildPortrait(target),
                         const SizedBox(height: 12),
                         _buildStatusPanel(target),
                         if (target.isEscaped) ...[
@@ -133,6 +136,22 @@ class _AbnormalityDetailPageState
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildPortrait(Abnormality a) {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        border: Border.all(color: AppColors.primary, width: 1),
+      ),
+      child: AbnormalityImage(
+        assetPath: a.portraitAssetPath,
+        iconSize: 96,
+        fit: BoxFit.contain,
+      ),
     );
   }
 

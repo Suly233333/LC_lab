@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 import '../models/abnormality.dart';
+import 'abnormality_image.dart';
 
 /// 提取仪式动画组件（Extraction Ceremony）。
 ///
@@ -100,11 +101,13 @@ class _ExtractionCeremonyWidgetState extends State<ExtractionCeremonyWidget>
                     // 揭晓的立绘（淡入）
                     FadeTransition(
                       opacity: _revealController,
-                      child: const Center(
-                        child: Icon(
-                          Icons.visibility_outlined,
-                          size: 96,
-                          color: AppColors.primary,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: AbnormalityImage(
+                          assetPath:
+                              widget.abnormality.portraitAssetPath,
+                          iconSize: 96,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),

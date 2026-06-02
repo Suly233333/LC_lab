@@ -6,6 +6,7 @@ import '../models/abnormality.dart';
 import '../models/daily_state.dart';
 import '../services/extraction_service.dart';
 import '../state/app_providers.dart';
+import '../widgets/abnormality_image.dart';
 import '../widgets/caution_overlay.dart';
 import '../widgets/extraction_ceremony_widget.dart';
 import '../widgets/lcorp_button.dart';
@@ -248,7 +249,7 @@ class _AbnormalityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 立绘占位（v1.0 暂用图标）
+          // 立绘占位（缺图自动回退到图标）
           Expanded(
             child: Container(
               alignment: Alignment.center,
@@ -256,10 +257,8 @@ class _AbnormalityCard extends StatelessWidget {
                 color: AppColors.background,
                 border: Border.all(color: AppColors.primary, width: 1),
               ),
-              child: const Icon(
-                Icons.visibility_outlined,
-                size: 48,
-                color: AppColors.primary,
+              child: AbnormalityImage(
+                assetPath: abnormality.iconAssetPath,
               ),
             ),
           ),
