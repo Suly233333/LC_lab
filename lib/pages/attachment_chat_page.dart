@@ -69,10 +69,18 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
     _scrollToBottom();
 
     final AttachmentService service = ref.read(attachmentServiceProvider);
-    final String reply = await service.mockResponse(
-      abnormality: abn,
-      userMessage: text,
-    );
+    final List<AttachmentTurn> history = _messages
+        .map((m) => AttachmentTurn(fromUser: m.fromUser, text: m.text))
+        .toList(growable: false);
+    String reply;
+    try {
+      reply = await service.respond(
+        abnormality: abn,
+        history: history,
+      );
+    } catch (e) {
+      reply = '（与它的连接出现了杂音…）\n[$e]';
+    }
     if (!mounted) return;
     setState(() {
       _messages.add(_ChatMessage(fromUser: false, text: reply));

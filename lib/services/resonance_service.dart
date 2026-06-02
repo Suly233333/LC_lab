@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/abnormality_repository.dart';
 import '../core/diary_repository.dart';
+import '../core/glm_client.dart';
+import '../core/secrets.dart';
 import '../models/abnormality.dart';
 import '../models/diary_entry.dart';
 import '../state/app_providers.dart';
@@ -51,6 +55,105 @@ class HeuristicLlmMatcher implements LlmMatcher {
   }
 }
 
+/// 智谱 GLM 实现的共鸣度匹配器。
+///
+/// 严格约束：仅返回 JSON 对象 `{abnormalityId: delta}`，delta ∈ [0, 15]。
+class GlmLlmMatcher implements LlmMatcher {
+  GlmLlmMatcher({GlmClient? client, String? model})
+      : _client = client ?? GlmClient(),
+        _model = model ?? Secrets.glmResonanceModel;
+
+  final GlmClient _client;
+  final String _model;
+
+  static const String _systemPrompt = '''
+你是脑叶公司（Lobotomy Corporation）共鸣度匹配引擎。
+任务：根据用户当天的日记内容与用户主动选择的"认知滤网"标签，
+判断这条日记与给定的若干"异想体（Abnormality）"在语义上的共鸣强度。
+
+严格规则：
+1. 仅基于异想体的 featureTags（语义特征）来判断；不允许凭空联想。
+2. 给每个异想体一个整数共鸣度增量 delta，范围 0 到 15。
+   - 0 表示几乎无关；
+   - 5 左右表示有间接共鸣；
+   - 10 以上表示强共鸣；
+   - 15 仅在日记内容明显对应大量 featureTags 时给出。
+3. 输出必须是合法 JSON 对象，键为异想体 ID，值为整数 delta。
+   不要输出任何解释、Markdown、注释或额外文字。
+4. 不要返回未在候选列表中的异想体 ID。
+5. delta 为 0 的项可以省略。
+''';
+
+  @override
+  Future<Map<String, int>> match({
+    required String content,
+    required List<String> cognitiveFilters,
+    required List<Abnormality> candidates,
+  }) async {
+    if (candidates.isEmpty) return const <String, int>{};
+
+    final List<Map<String, dynamic>> candidatePayload = candidates
+        .map((a) => {
+              'id': a.id,
+              'featureTags': a.featureTags,
+            })
+        .toList(growable: false);
+
+    final Map<String, dynamic> userPayload = {
+      'diary': content,
+      'cognitiveFilters': cognitiveFilters,
+      'candidates': candidatePayload,
+    };
+
+    final String reply = await _client.chat(
+      model: _model,
+      temperature: 0.2,
+      responseFormat: const {'type': 'json_object'},
+      messages: [
+        const GlmMessage(role: 'system', content: _systemPrompt),
+        GlmMessage(
+          role: 'user',
+          content: json.encode(userPayload),
+        ),
+      ],
+    );
+
+    return _parseReply(reply, candidates);
+  }
+
+  Map<String, int> _parseReply(String reply, List<Abnormality> candidates) {
+    final Set<String> validIds = candidates.map((a) => a.id).toSet();
+    final Map<String, int> out = <String, int>{};
+    try {
+      final dynamic decoded = json.decode(_extractJson(reply));
+      if (decoded is Map<String, dynamic>) {
+        decoded.forEach((k, v) {
+          if (!validIds.contains(k)) return;
+          if (v is num) {
+            int delta = v.toInt();
+            if (delta < 0) delta = 0;
+            if (delta > 15) delta = 15;
+            if (delta > 0) out[k] = delta;
+          }
+        });
+      }
+    } catch (_) {
+      // 解析失败：返回空表，由调用方决定降级策略。
+    }
+    return out;
+  }
+
+  /// 从可能含有围栏代码块的文本中抽出 JSON 主体。
+  String _extractJson(String raw) {
+    final String s = raw.trim();
+    if (s.startsWith('{') && s.endsWith('}')) return s;
+    final int start = s.indexOf('{');
+    final int end = s.lastIndexOf('}');
+    if (start >= 0 && end > start) return s.substring(start, end + 1);
+    return s;
+  }
+}
+
 /// 共鸣度引擎。
 ///
 /// 仅作用于"未解锁"的异想体；对每条新日记调用 [scoreAndPersist]：
@@ -89,11 +192,21 @@ class ResonanceService {
       return entry;
     }
 
-    final Map<String, int> deltas = await _matcher.match(
-      content: entry.content,
-      cognitiveFilters: entry.cognitiveFilters,
-      candidates: candidates,
-    );
+    Map<String, int> deltas;
+    try {
+      deltas = await _matcher.match(
+        content: entry.content,
+        cognitiveFilters: entry.cognitiveFilters,
+        candidates: candidates,
+      );
+    } catch (_) {
+      // 大模型调用失败时降级为本地启发式，确保流程不被阻断。
+      deltas = await const HeuristicLlmMatcher().match(
+        content: entry.content,
+        cognitiveFilters: entry.cognitiveFilters,
+        candidates: candidates,
+      );
+    }
 
     // 回填日记 deltas（隐藏字段）。
     final DiaryEntry updated = entry.copyWith(resonanceDeltas: deltas);
@@ -108,9 +221,10 @@ class ResonanceService {
   }
 }
 
-/// LLM 匹配器 Provider，可在测试或上线时替换为真实大模型实现。
+/// LLM 匹配器 Provider。默认使用 GLM；测试 / 离线时可覆盖为
+/// [HeuristicLlmMatcher]。
 final llmMatcherProvider = Provider<LlmMatcher>(
-  (ref) => const HeuristicLlmMatcher(),
+  (ref) => GlmLlmMatcher(),
 );
 
 /// ResonanceService Provider。

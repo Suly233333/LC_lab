@@ -3,27 +3,141 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/glm_client.dart';
+import '../core/secrets.dart';
 import '../models/abnormality.dart';
 
-/// 沟通工作 AI 服务（占位 mock）。
+/// 简单对话回合载体（用户 / 异想体）。
+class AttachmentTurn {
+  const AttachmentTurn({required this.fromUser, required this.text});
+  final bool fromUser;
+  final String text;
+}
+
+/// 沟通工作 AI 服务。
 ///
-/// 在大模型接入前，使用基于 [Abnormality.featureTags] 与 [Abnormality.workReactions]
-/// 的简单回复策略；并按概率主动向员工提问。
-class AttachmentService {
-  AttachmentService({Random? random}) : _random = random ?? Random();
+/// - 真实实现 [GlmAttachmentService] 调用智谱 GLM，按异想体设定生成对话。
+/// - 占位实现 [MockAttachmentService] 在网络异常或测试时降级使用。
+abstract class AttachmentService {
+  /// 生成一条来自异想体的回复。
+  ///
+  /// [history] 是按时间正序的完整对话上下文（含本次用户消息）。
+  Future<String> respond({
+    required Abnormality abnormality,
+    required List<AttachmentTurn> history,
+  });
+
+  /// 异想体偶尔会主动提问；返回 null 表示本次不发问。
+  String? maybeAskQuestion({required Abnormality abnormality});
+}
+
+/// GLM 实现：为每个异想体构造专属 system prompt，让模型严格扮演。
+class GlmAttachmentService implements AttachmentService {
+  GlmAttachmentService({GlmClient? client, String? model, Random? random})
+      : _client = client ?? GlmClient(),
+        _model = model ?? Secrets.glmChatModel,
+        _random = random ?? Random();
+
+  final GlmClient _client;
+  final String _model;
+  final Random _random;
+
+  String _systemPromptFor(Abnormality a) {
+    final String tags = a.featureTags.join('、');
+    final StringBuffer reactionSamples = StringBuffer();
+    a.workReactions.forEach((k, v) {
+      reactionSamples.writeln('  - $k: $v');
+    });
+    return '''
+你正在扮演脑叶公司（Lobotomy Corporation）收容设施中的一只异想体。
+你不是 AI，不是助手，不要破坏角色，也不要谈论"模型/规则/系统"。
+
+# 异想体档案
+- ID：${a.id}
+- 名称：${a.name}
+- 等级：${a.grade}
+- 外观与设定：${a.description}
+- 管理备注：${a.manageNote}
+- 语义特征（featureTags）：$tags
+- 当前能量值（0~100）：${a.energyLevel}（≤0 表示消极）
+- 逆卡巴拉计数器：${a.qliphothCounter} / ${a.qliphothMax}
+
+# 工作反馈语料（你的语气、用词、行为模板）
+${reactionSamples.toString()}
+
+# 对话规则
+1. 对方是来到收容间与你沟通（attachment）的脑叶公司员工"主管"。
+2. 严格保持自己的人格、节奏与说话方式：
+   - 行为方式应符合 featureTags 与 description；
+   - 优先复用上面"工作反馈语料"的语气、动作、措辞。
+3. 回复尽量简短克制，1~3 句，避免长篇说教；可以用括号描写动作或氛围。
+4. 不要透露任何关于"共鸣度 / currentResonance / requiredResonance"的具体数值。
+5. 不要使用 Markdown 标题；可以使用普通中文标点。
+6. 不要扮演员工或主管的发言；只输出该异想体此刻对当前对话的回应。
+7. 用中文回应。
+''';
+  }
+
+  @override
+  Future<String> respond({
+    required Abnormality abnormality,
+    required List<AttachmentTurn> history,
+  }) async {
+    final List<GlmMessage> msgs = <GlmMessage>[
+      GlmMessage(role: 'system', content: _systemPromptFor(abnormality)),
+    ];
+    for (final AttachmentTurn t in history) {
+      msgs.add(GlmMessage(
+        role: t.fromUser ? 'user' : 'assistant',
+        content: t.text,
+      ));
+    }
+    final String reply = await _client.chat(
+      model: _model,
+      temperature: 0.85,
+      messages: msgs,
+    );
+    return reply.trim().isEmpty ? '（它沉默着，没有回应。）' : reply.trim();
+  }
+
+  @override
+  String? maybeAskQuestion({required Abnormality abnormality}) {
+    if (_random.nextDouble() > 0.35) return null;
+    if (abnormality.featureTags.isEmpty) return null;
+    final String tag = abnormality.featureTags[
+        _random.nextInt(abnormality.featureTags.length)];
+    final List<String> templates = [
+      '你也曾经感受过「$tag」吗？',
+      '当你独自一人时，「$tag」会浮现吗？',
+      '人类是怎样面对「$tag」的？',
+    ];
+    return templates[_random.nextInt(templates.length)];
+  }
+}
+
+/// 占位实现：基于 workReactions / featureTags 的简单回复，用于离线降级。
+class MockAttachmentService implements AttachmentService {
+  MockAttachmentService({Random? random}) : _random = random ?? Random();
 
   final Random _random;
 
-  /// 生成一条来自异想体的回复。
-  ///
-  /// `userMessage` 为员工最新发言；返回值为异想体回复文本，
-  /// 实际接入大模型时只需替换该实现。
+  /// 兼容旧 API：保留 mockResponse 入口供测试调用。
   Future<String> mockResponse({
     required Abnormality abnormality,
     required String userMessage,
   }) async {
-    // 模拟网络往返
-    await Future<void>.delayed(const Duration(milliseconds: 600));
+    return respond(
+      abnormality: abnormality,
+      history: [AttachmentTurn(fromUser: true, text: userMessage)],
+    );
+  }
+
+  @override
+  Future<String> respond({
+    required Abnormality abnormality,
+    required List<AttachmentTurn> history,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
 
     final List<String> openings = [
       abnormality.workReactions['attachment_success'] ?? '...',
@@ -36,14 +150,15 @@ class AttachmentService {
         : abnormality.featureTags[
             _random.nextInt(abnormality.featureTags.length)];
 
-    if (userMessage.trim().isEmpty) {
+    final AttachmentTurn? last =
+        history.isEmpty ? null : history.last;
+    if (last == null || last.text.trim().isEmpty) {
       return '${openings[_random.nextInt(openings.length)]}（关于「$tag」）';
     }
-
     return '${openings[_random.nextInt(openings.length)]}\n关于"$tag"——你又是怎么看的？';
   }
 
-  /// 异想体偶尔会主动提问；返回 null 表示本次不发问。
+  @override
   String? maybeAskQuestion({required Abnormality abnormality}) {
     if (_random.nextDouble() > 0.4) return null;
     if (abnormality.featureTags.isEmpty) return null;
@@ -58,5 +173,7 @@ class AttachmentService {
   }
 }
 
-final attachmentServiceProvider =
-    Provider<AttachmentService>((ref) => AttachmentService());
+/// 默认接入 GLM；测试 / 离线时可覆盖为 [MockAttachmentService]。
+final attachmentServiceProvider = Provider<AttachmentService>(
+  (ref) => GlmAttachmentService(),
+);
