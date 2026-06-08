@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
 import '../models/abnormality.dart';
-import '../models/work_log.dart' show WorkType;
 import '../services/attachment_service.dart';
-import '../services/work_service.dart';
 import '../state/app_providers.dart';
 import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
@@ -18,11 +16,11 @@ class _ChatMessage {
   final bool isQuestion;
 }
 
-/// 沟通工作对话页（Attachment）。
+/// 异想体对话页（Attachment）。
 ///
-/// - 自由对话（AttachmentService.mockResponse 占位，未来替换为真实大模型）
+/// - 自由对话（GLM/CharGLM 接入，离线时降级 Mock）
 /// - 异想体会按概率主动提问
-/// - 结束对话（CLOSE SESSION）时调用 WorkService 结算一次沟通工作
+/// - 直接 pop 关闭，不再结算"工作"
 class AttachmentChatPage extends ConsumerStatefulWidget {
   const AttachmentChatPage({super.key, required this.abnormalityId});
   final String abnormalityId;
@@ -37,7 +35,6 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
   final ScrollController _scroll = ScrollController();
   final List<_ChatMessage> _messages = <_ChatMessage>[];
   bool _sending = false;
-  bool _settling = false;
 
   @override
   void dispose() {
@@ -105,39 +102,6 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
     if (mounted) setState(() => _sending = false);
   }
 
-  Future<void> _closeSession() async {
-    if (_settling) return;
-    if (_messages.where((m) => m.fromUser).isEmpty) {
-      Navigator.of(context).pop();
-      return;
-    }
-    setState(() => _settling = true);
-    try {
-      final WorkOutcome outcome = await ref
-          .read(workServiceProvider)
-          .performWork(
-            abnormalityId: widget.abnormalityId,
-            workType: WorkType.attachment,
-          );
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(outcome.success
-              ? '// SESSION SUCCEEDED  +${outcome.peBoxGained} PE'
-              : '// SESSION FAILED'),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('// $e')),
-      );
-    } finally {
-      if (mounted) setState(() => _settling = false);
-    }
-  }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scroll.hasClients) return;
@@ -155,7 +119,7 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('ATTACHMENT  /  ${abn?.name ?? ''}'),
+        title: Text('COMMUNICATION  /  ${abn?.name ?? ''}'),
       ),
       body: Stack(
         children: [
@@ -192,48 +156,32 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
           top: BorderSide(color: AppColors.primary, width: 1),
         ),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _input,
-                  enabled: !_sending && !_settling,
-                  style: const TextStyle(
-                    fontFamily: AppTheme.monoFontFamily,
-                    color: AppColors.onBackground,
-                  ),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: '说点什么...',
-                  ),
-                  onSubmitted: (_) => _send(),
-                ),
+          Expanded(
+            child: TextField(
+              controller: _input,
+              enabled: !_sending,
+              style: const TextStyle(
+                fontFamily: AppTheme.monoFontFamily,
+                color: AppColors.onBackground,
               ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 80,
-                height: 38,
-                child: LCorpButton(
-                  label: 'SEND',
-                  height: 38,
-                  enableScanline: false,
-                  onPressed: (_sending || _settling) ? null : _send,
-                ),
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: '说点什么...',
               ),
-            ],
+              onSubmitted: (_) => _send(),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(width: 8),
           SizedBox(
-            width: double.infinity,
+            width: 80,
             height: 38,
             child: LCorpButton(
-              label: _settling
-                  ? 'SETTLING...'
-                  : 'CLOSE SESSION (LOG WORK)',
+              label: 'SEND',
               height: 38,
-              onPressed: _settling ? null : _closeSession,
+              enableScanline: false,
+              onPressed: _sending ? null : _send,
             ),
           ),
         ],
@@ -250,7 +198,7 @@ class _Hint extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 32),
       child: Center(
         child: Text(
-          '// 与异想体自由对话，结束时点击 CLOSE SESSION 结算工作。',
+          '// 与异想体自由对话。',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: AppTheme.monoFontFamily,

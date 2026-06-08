@@ -1,49 +1,46 @@
 # TODO.md - Project Moon Life Record (L-Corp Edition)
 
 > 目标平台：**Android**（v1.0 仅发布安卓端）。开发期间使用 Android 真机或模拟器调试。
+> v1.1 精简版：仅保留**日记记录 / 共鸣度累计 / 异想体对话**三大核心模块。
 
 ## 第一阶段：项目初始化与 UI 基建
 
 - [x] **1.1** 执行 `flutter create --platforms=android`，在 `pubspec.yaml` 中引入依赖：`flutter_riverpod`, `sqflite`, `path`, `intl`, `image_picker`, `permission_handler`, `path_provider`
 - [x] **1.2** 在 `android/app/build.gradle` 中设置 `minSdkVersion 26`、`targetSdkVersion` 跟随 Flutter 默认；在 `AndroidManifest.xml` 申请权限：`RECORD_AUDIO` / `READ_MEDIA_IMAGES`
-- [ ] **1.3** 在 `lib/core/theme.dart` 中定义 `AppTheme`：背景色 `#121212`，主强调色 `#FFD700`，次背景 `#262626`，警告色 `#FF8F00`
-- [ ] **1.4** 开发 `LCorpGridBackground` 组件，在全局背景上渲染极细暗黄网格线
-- [ ] **1.5** 配置 `TerminalText` 等宽字体样式，封装带扫描线动效的 `LCorpButton`
+- [x] **1.3** 在 `lib/core/theme.dart` 中定义 `AppTheme`：背景色 `#0F1620`，主强调色 `#2D7DF6`，次背景 `#1B2330`，警告色 `#E53935`
+- [x] **1.4** 开发 `LCorpGridBackground` 组件，在全局背景上渲染极细半透明蓝色网格线
+- [x] **1.5** 配置 `TerminalText` 等宽字体样式，封装 `LCorpButton`
 
 ---
 
 ## 第二阶段：核心数据模型
 
-- [x] **2.1** 实现 `lib/models/abnormality.dart`，包含 `Abnormality` 类与 `BreachType` 枚举（escape / penaltyBox / none），并包含字段：`requiredResonance` / `currentResonance`（标注为隐藏字段）、`energyLevel`（默认 50）、`qliphothCounter` / `qliphothMax`、`penaltyAmount`、`escapeDrain`、`workReactions`（key 格式 `{workType}_{result}`）
-- [x] **2.2** 实现 `lib/models/diary_entry.dart`，字段包括：`content`（Markdown）、`attachments`、`cognitiveFilters`、`resonanceDeltas`（隐藏字段，对各异想体的共鸣度增量）、`createdAt`；**不包含** `abnormalityId` 与 `workType`
-- [x] **2.3** 实现 `lib/models/work_log.dart`：包含 `abnormalityId` / `agentId` / `workType` / `success` / `isCriticalFail` / `peBoxGained` / `createdAt`，作为工作执行的独立记录
-- [x] **2.4** 实现 `lib/models/agent.dart`（HP、`maxHp` 默认 100、四维 `aptitude`、装备槽 `equippedEgoIds`）与 `lib/models/ego_gear.dart`（包含 `bonusStats.suppression` 用于镇压加成）
-- [x] **2.5** 实现 `lib/models/daily_state.dart`，管理每日提取候选与解锁配额（按自然日 0:00 重置）
-- [x] **2.6** 编写 `assets/presets/abnormalities.json`，包含「一罪与百善」与「老妇人」两条初始预设（字段需与 AGENT.md 6.1 / 6.2 完全对齐：`requiredResonance` / `escapeDrain` / 完整 `workReactions` 含 success 与 fail），并实现解析加载逻辑
+- [x] **2.1** 实现 `lib/models/abnormality.dart`，包含 `Abnormality` 类，字段精简为：`id` / `name` / `grade` / `featureTags` / `requiredDays` / `requiredResonance` / `currentResonance`（隐藏字段）/ `isUnlocked` / `isInitial` / `unlockDate` / `description` / `manageNote`
+- [x] **2.2** 实现 `lib/models/diary_entry.dart`，字段包括：`content`（Markdown）、`attachments`、`cognitiveFilters`、`resonanceDeltas`（隐藏字段，对各异想体的共鸣度增量）、`createdAt`；**不包含** `abnormalityId`
+- [x] **2.6** 编写 `assets/presets/abnormalities.json`，包含「一罪与百善」与「老妇人」两条初始预设（字段需与 AGENT.md 6.1 / 6.2 完全对齐：`requiredResonance` / `requiredDays` / `description` / `manageNote`），并实现解析加载逻辑
 
 ---
 
 ## 第三阶段：本地数据库层（sqflite）
 
-- [x] **3.1** 编写 `lib/core/database_helper.dart`，初始化并创建 `diary_entries`、`work_logs`、`abnormalities`、`agents`、`ego_inventory` 五张表
-- [x] **3.2** 实现异想体的 CRUD：解锁状态、`currentResonance`、`qliphothCounter`、`energyLevel`、PE Box 余额（全局）的持久化
-- [x] **3.3** 实现日记条目与工作记录的存储，并支持按日期索引查询
+- [x] **3.1** 编写 `lib/core/database_helper.dart`，初始化并创建 `diary_entries`、`abnormalities` 两张表
+- [x] **3.2** 实现异想体的 CRUD：解锁状态、`currentResonance` 的持久化
+- [x] **3.3** 实现日记条目的存储，并支持按日期索引查询
 
 ---
 
 ## 第四阶段：状态管理与共鸣度引擎（Riverpod）
 
-- [x] **4.1** 使用 `StateNotifierProvider` 建立全局状态：已解锁异想体列表、日记列表、PE Box 计数（下限 0）、当日提取状态
+- [x] **4.1** 使用 `AsyncNotifierProvider` 建立全局状态：异想体列表、日记列表；新增 `pendingUnlocksProvider` 用于驱动解锁仪式动画
 - [x] **4.2** 实现共鸣度引擎 `ResonanceService`：将日记内容（文本 + cognitiveFilters）提交给大模型，要求其返回结构化 JSON `{abnormalityId: delta}`，写入 `DiaryEntry.resonanceDeltas` 并累加到对应 `Abnormality.currentResonance`；**严禁将共鸣度数值暴露给 UI 层**
-- [x] **4.3** 实现每日提取逻辑：当 `currentResonance ≥ requiredResonance` **且** 累计天数 ≥ `requiredDays` 时进入候选池；每天随机抽取 3 个候选，按自然日 0:00 重置；用户每日最多解锁 1 个
-- [x] **4.4** 实现定时任务：每 8 小时检测每个已解锁异想体是否有互动（写日记不算，需为工作执行），无互动则 `qliphothCounter -1`
+- [x] **4.3** 实现 `UnlockService.evaluateAutoUnlock()`：当 `currentResonance ≥ requiredResonance` **且** 累计天数 ≥ `requiredDays` 时立即自动解锁，并通过 `pendingUnlocksProvider` 通知 UI 弹仪式动画
 
 ---
 
 ## 第五阶段：日记系统 UI
 
 - [x] **5.1** 开发日志列表页 `ObservationLogsPage`：L-Corp 风格卡片列表，不显示任何共鸣度进度条
-- [x] **5.2** 开发日志编辑页 `NewEntryPage`（**仅记录观测，不选择异想体也不选择工作类型**）：
+- [x] **5.2** 开发日志编辑页 `NewEntryPage`（**仅记录观测，不选择异想体**）：
   - Markdown 文本输入
   - 用户可添加预设或自定义标签
   - 图片/音频附件上传（`image_picker`）
@@ -51,34 +48,30 @@
 
 ---
 
-## 第六阶段：异想体管理与工作系统 UI
+## 第六阶段：异想体档案库与对话 UI
 
-- [x] **6.1** 开发异想体档案库页 `AbnormalityGalleryPage`：未解锁项显示黄黑斜纹"Caution"遮盖板
-- [x] **6.2** 实现提取仪式动画 `ExtractionCeremonyWidget`：黄色光栅扫描线上下滚动，揭晓档案立绘
-- [x] **6.3** 开发工作交互界面：四种工作按钮（本能/洞察/沟通/压迫），实现成功率公式 `clamp(weight × aptitude / 10, 0.05, 0.95)`，处理大失败（成功率 < 20% 且判定失败时 `qliphothCounter -1`），PE Box 产出 `floor(weight × aptitude × 2)`，每次工作生成 `WorkLog` 记录
-- [x] **6.4** 实现 `energyLevel` 变化与消极状态：成功 +10 / 失败 -15（消极状态下保底 +5），归零进入消极状态（权重 ×0.5），恢复到 30 以上解除
-- [x] **6.5** 实现沟通工作的对话气泡 UI，预留大模型 API 调用占位符（`AttachmentService.mockResponse()`）
-- [x] **6.6** 实现工作反馈展示：根据 `success/fail` 从 `workReactions[{workType}_{result}]` 读取文案
-
----
-
-## 第七阶段：突破机制、出逃镇压与 EGO 商店
-
-- [x] **7.1** 开发 LED 风格逆卡巴拉计数器组件 `QliphothCounterWidget`，实时反映计数器变化
-- [x] **7.2** 实现突破警报 `BreachAlertOverlay`：全屏黑黄交替闪烁 + "ERROR"像素化抖动动效
-- [x] **7.3** 根据 `breachType` 实现惩罚逻辑：
-  - `none` → 仅重置计数器
-  - `penaltyBox` → 立即扣除 `penaltyAmount`% 的 PE Box（PE Box clamp ≥ 0）
-  - `escape` → 进入出逃状态，每分钟扣除 `escapeDrain` PE Box
-- [x] **7.4** 实现出逃与镇压：主管可选镇压或不镇压；不镇压则 30 分钟后自动返回；镇压成功率 `clamp(Σ(equippedEgo.bonusStats[suppression] × 0.1) + 0.2, 0.1, 0.9)`，成功奖励 `floor(qliphothMax × 2)` PE Box，失败员工 HP -20（HP clamp ≥ 0）
-- [x] **7.5** 实现员工受伤机制：HP 归零进入"受伤"状态无法工作，每小时自然恢复 10 HP（clamp 至 `maxHp`）
-- [x] **7.6** 实现 EGO 装备商店 `EgoShopPage`：PE Box 消费兑换装备，员工详情页支持穿脱
+- [x] **6.1** 开发异想体档案库页 `AbnormalityGalleryPage`：未解锁项显示警报红/近黑斜纹"Caution"遮盖板；点击已解锁卡片进入详情/对话页
+- [x] **6.2** 实现自动解锁仪式动画 `ExtractionCeremonyWidget`：扫描线上下滚动，揭晓档案立绘；由 `pendingUnlocksProvider` 驱动
+- [x] **6.5** 开发独立的异想体对话页 `AttachmentChatPage`：接入 CharGLM/GLM；异想体偶尔主动反问；不再有"工作结算"流程
 
 ---
 
 ## 第八阶段：收尾与调试
 
-- [x] **8.1** 每日解锁限额校验：硬限制每日最多解锁 1 个，累计记录天数上限 30 天
-- [x] **8.2** 全页面主题一致性检查：确保黄黑配色在所有页面正确渲染
+- [x] **8.2** 全页面主题一致性检查：确保 L-Corp 配色在所有页面正确渲染
 - [x] **8.3** 运行 `flutter analyze` + `flutter test` 修复所有警告与报错
 - [x] **8.4** 回归验证：所有共鸣度数值（`currentResonance` / `resonanceDeltas` / `requiredResonance`）在任何 UI 界面均不可见
+
+---
+
+## 第九阶段：精简化重构（v1.1）
+
+- [x] **9.1** 删除工作系统：`work_service` / `work_log` 模型 / `work_log_repository`
+- [x] **9.2** 删除突破 / 镇压 / 出逃：`breach_service` / `breach_alert_overlay` / `qliphoth_counter_widget` / `qliphoth_scheduler`
+- [x] **9.3** 删除员工 Agent：`agent` 模型 / `agent_repository` / `agent_panel_page`
+- [x] **9.4** 删除 EGO 装备：`ego_gear` 模型 / `ego_repository` / `ego_shop_service` / `ego_shop_page` / `ego_gears.json`
+- [x] **9.5** 删除 PE Box 余额、`DailyState`、每日 3 选 1 提取池逻辑
+- [x] **9.6** 精简 `Abnormality` 模型：去除 `workTypeWeights` / `workReactions` / `qliphothCounter` / `qliphothMax` / `breachType` / `penaltyAmount` / `escapeDrain` / `isEscaped` / `escapeStartedAt` / `energyLevel` / `BreachType` 枚举
+- [x] **9.7** 数据库 schema 升级 v3：DROP 所有旧表后重建，仅保留 `abnormalities` 与 `diary_entries`
+- [x] **9.8** 详情页重写为简化版：立绘 + 等级 + 描述 + 管理备注 + `BEGIN COMMUNICATION` 按钮
+- [x] **9.9** 同步更新 AGENT.md / TODO.md / README.md

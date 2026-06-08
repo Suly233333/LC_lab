@@ -9,6 +9,7 @@ import '../core/secrets.dart';
 import '../models/abnormality.dart';
 import '../models/diary_entry.dart';
 import '../state/app_providers.dart';
+import 'unlock_service.dart';
 
 /// 大模型匹配器接口。
 ///
@@ -167,15 +168,19 @@ class ResonanceService {
   ResonanceService({
     required AbnormalityRepository abnormalityRepo,
     required DiaryRepository diaryRepo,
+    required UnlockService unlockService,
     LlmMatcher? matcher,
   // ignore: prefer_initializing_formals
   })  : _abnRepo = abnormalityRepo,
         // ignore: prefer_initializing_formals
         _diaryRepo = diaryRepo,
+        // ignore: prefer_initializing_formals
+        _unlockService = unlockService,
         _matcher = matcher ?? const HeuristicLlmMatcher();
 
   final AbnormalityRepository _abnRepo;
   final DiaryRepository _diaryRepo;
+  final UnlockService _unlockService;
   final LlmMatcher _matcher;
 
   /// 处理一条新日记：调用大模型 → 写回 deltas → 累加到异想体。
@@ -217,6 +222,9 @@ class ResonanceService {
       if (e.value <= 0) continue;
       await _abnRepo.addResonance(e.key, e.value);
     }
+
+    // 触发自动解锁判定（满足共鸣度阈值 + 累计天数即解锁）。
+    await _unlockService.evaluateAutoUnlock();
     return updated;
   }
 }
@@ -232,6 +240,7 @@ final resonanceServiceProvider = Provider<ResonanceService>((ref) {
   return ResonanceService(
     abnormalityRepo: ref.watch(abnormalityRepositoryProvider),
     diaryRepo: ref.watch(diaryRepositoryProvider),
+    unlockService: ref.watch(unlockServiceProvider),
     matcher: ref.watch(llmMatcherProvider),
   );
 });

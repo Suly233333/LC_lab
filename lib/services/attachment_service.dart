@@ -53,10 +53,6 @@ class GlmAttachmentService implements AttachmentService {
 
   String _systemPromptFor(Abnormality a) {
     final String tags = a.featureTags.join('、');
-    final StringBuffer reactionSamples = StringBuffer();
-    a.workReactions.forEach((k, v) {
-      reactionSamples.writeln('  - $k: $v');
-    });
     return '''
 你正在扮演脑叶公司（Lobotomy Corporation）收容设施中的一只异想体。
 你不是 AI，不是助手，不要破坏角色，也不要谈论"模型/规则/系统"。
@@ -68,17 +64,11 @@ class GlmAttachmentService implements AttachmentService {
 - 外观与设定：${a.description}
 - 管理备注：${a.manageNote}
 - 语义特征（featureTags）：$tags
-- 当前能量值（0~100）：${a.energyLevel}（≤0 表示消极）
-- 逆卡巴拉计数器：${a.qliphothCounter} / ${a.qliphothMax}
-
-# 工作反馈语料（你的语气、用词、行为模板）
-${reactionSamples.toString()}
 
 # 对话规则
-1. 对方是来到收容间与你沟通（attachment）的脑叶公司员工"主管"。
+1. 对方是来到收容间与你沟通的脑叶公司员工"主管"。
 2. 严格保持自己的人格、节奏与说话方式：
-   - 行为方式应符合 featureTags 与 description；
-   - 优先复用上面"工作反馈语料"的语气、动作、措辞。
+   - 行为方式应符合 featureTags 与 description。
 3. 回复尽量简短克制，1~3 句，避免长篇说教；可以用括号描写动作或氛围。
 4. 不要透露任何关于"共鸣度 / currentResonance / requiredResonance"的具体数值。
 5. 不要使用 Markdown 标题；可以使用普通中文标点。
@@ -90,13 +80,10 @@ ${reactionSamples.toString()}
   /// CharGLM 专用 meta：把异想体设定结构化注入。
   Map<String, dynamic> _metaFor(Abnormality a) {
     final String tags = a.featureTags.join('、');
-    final String reactions =
-        a.workReactions.entries.map((e) => '${e.key}: ${e.value}').join(' | ');
     final String botInfo =
         '${a.name}（${a.id} / ${a.grade}）。${a.description} '
         '管理备注：${a.manageNote} '
         '语义特征：$tags。'
-        '语气与行为参考样本：$reactions。'
         '严禁透露共鸣度数值；不要替主管发言；保持人格不要破戒。';
     return {
       'bot_name': a.name,
@@ -149,7 +136,7 @@ ${reactionSamples.toString()}
   }
 }
 
-/// 占位实现：基于 workReactions / featureTags 的简单回复，用于离线降级。
+/// 占位实现：基于 featureTags 的简单回复，用于离线降级。
 class MockAttachmentService implements AttachmentService {
   MockAttachmentService({Random? random}) : _random = random ?? Random();
 
@@ -174,9 +161,9 @@ class MockAttachmentService implements AttachmentService {
     await Future<void>.delayed(const Duration(milliseconds: 400));
 
     final List<String> openings = [
-      abnormality.workReactions['attachment_success'] ?? '...',
       '它静静地看着你，似乎在等待。',
       '空气凝滞了一瞬，然后流动起来。',
+      '它没有说话，只是缓慢地呼吸。',
     ];
 
     final String tag = abnormality.featureTags.isEmpty

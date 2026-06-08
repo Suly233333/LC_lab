@@ -1,16 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../core/abnormality_repository.dart';
-import '../core/database_helper.dart';
 import '../core/diary_repository.dart';
 import '../core/preset_loader.dart';
-import '../core/work_log_repository.dart';
 import '../models/abnormality.dart';
-import '../models/daily_state.dart';
 import '../models/diary_entry.dart';
 
 /// ---------------- 仓库 Provider（单例） ----------------
@@ -21,10 +14,6 @@ final abnormalityRepositoryProvider = Provider<AbnormalityRepository>(
 
 final diaryRepositoryProvider = Provider<DiaryRepository>(
   (ref) => DiaryRepository(),
-);
-
-final workLogRepositoryProvider = Provider<WorkLogRepository>(
-  (ref) => WorkLogRepository(),
 );
 
 /// ---------------- 异想体（全部 / 已解锁） ----------------
@@ -113,110 +102,24 @@ final diaryListProvider =
   DiaryListNotifier.new,
 );
 
-/// ---------------- PE Box 全局余额（下限 0） ----------------
+/// ---------------- 待揭晓的解锁队列 ----------------
 
-class PeBoxBalanceNotifier extends AsyncNotifier<int> {
-  late final AbnormalityRepository _repo;
-
+/// 由 [UnlockService.evaluateAutoUnlock] 写入；档案库页监听后弹仪式动画并清空。
+class PendingUnlocksNotifier extends Notifier<List<Abnormality>> {
   @override
-  Future<int> build() async {
-    _repo = ref.watch(abnormalityRepositoryProvider);
-    return _repo.getPeBoxBalance();
+  List<Abnormality> build() => const <Abnormality>[];
+
+  void enqueue(List<Abnormality> items) {
+    if (items.isEmpty) return;
+    state = <Abnormality>[...state, ...items];
   }
 
-  Future<void> setBalance(int v) async {
-    final int updated = await _repo.setPeBoxBalance(v);
-    state = AsyncValue.data(updated);
-  }
-
-  /// 加（正）/扣（负）；扣除时 clamp 至 0。
-  Future<void> add(int delta) async {
-    final int updated = await _repo.addPeBoxBalance(delta);
-    state = AsyncValue.data(updated);
+  void clear() {
+    state = const <Abnormality>[];
   }
 }
 
-final peBoxBalanceProvider =
-    AsyncNotifierProvider<PeBoxBalanceNotifier, int>(
-  PeBoxBalanceNotifier.new,
-);
-
-/// ---------------- 当日 DailyState ----------------
-
-class DailyStateNotifier extends AsyncNotifier<DailyState> {
-  final DatabaseHelper _helper = DatabaseHelper.instance;
-
-  @override
-  Future<DailyState> build() async {
-    final Database db = await _helper.database;
-    final List<Map<String, Object?>> rows = await db.query(
-      DatabaseHelper.tableAppState,
-      where: 'key = ?',
-      whereArgs: [DatabaseHelper.kDailyState],
-      limit: 1,
-    );
-    final DateTime now = DateTime.now();
-    if (rows.isEmpty) {
-      final DailyState fresh = DailyState.forDate(now);
-      await _persist(fresh);
-      return fresh;
-    }
-    final Map<String, dynamic> raw =
-        json.decode(rows.first['value'] as String) as Map<String, dynamic>;
-    DailyState loaded = DailyState.fromJson(raw);
-    if (loaded.shouldReset(now)) {
-      loaded = DailyState.forDate(now);
-      await _persist(loaded);
-    }
-    return loaded;
-  }
-
-  Future<void> _persist(DailyState s) async {
-    final Database db = await _helper.database;
-    await db.insert(
-      DatabaseHelper.tableAppState,
-      {
-        'key': DatabaseHelper.kDailyState,
-        'value': json.encode(s.toJson()),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  /// 替换当日候选名单。
-  Future<void> setCandidates(List<String> candidates) async {
-    final DailyState current = state.value ?? DailyState.forDate(DateTime.now());
-    final DailyState next =
-        current.copyWith(extractionCandidates: candidates);
-    state = AsyncValue.data(next);
-    await _persist(next);
-  }
-
-  /// 解锁后自增计数（硬上限 [DailyState.dailyUnlockLimit]）。
-  Future<void> incrementUnlockCount() async {
-    final DailyState current = state.value ?? DailyState.forDate(DateTime.now());
-    final int candidate = current.unlockedCount + 1;
-    final int clamped = candidate > DailyState.dailyUnlockLimit
-        ? DailyState.dailyUnlockLimit
-        : candidate;
-    final DailyState next = current.copyWith(unlockedCount: clamped);
-    state = AsyncValue.data(next);
-    await _persist(next);
-  }
-
-  /// 显式刷新（如跨日时被调用）。
-  Future<void> refreshIfNewDay() async {
-    final DailyState current = state.value ?? DailyState.forDate(DateTime.now());
-    final DateTime now = DateTime.now();
-    if (current.shouldReset(now)) {
-      final DailyState fresh = DailyState.forDate(now);
-      state = AsyncValue.data(fresh);
-      await _persist(fresh);
-    }
-  }
-}
-
-final dailyStateProvider =
-    AsyncNotifierProvider<DailyStateNotifier, DailyState>(
-  DailyStateNotifier.new,
+final pendingUnlocksProvider =
+    NotifierProvider<PendingUnlocksNotifier, List<Abnormality>>(
+  PendingUnlocksNotifier.new,
 );

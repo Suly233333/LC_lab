@@ -138,23 +138,22 @@ class LCorpButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool enabled = onPressed != null;
-    final Color activeColor =
-        enabled ? color : color.withValues(alpha: 0.4);
+    final Color fillColor =
+        enabled ? color : color.withValues(alpha: 0.35);
+    final Color textColor = AppColors.background;
 
     return SizedBox(
       width: width,
       height: height,
       child: Material(
-        color: surfaceColor,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: activeColor, width: 1),
-          borderRadius: AppTheme.borderRadius,
+        color: fillColor,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
         ),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: AppTheme.borderRadius,
-          splashColor: color.withValues(alpha: 0.18),
-          highlightColor: color.withValues(alpha: 0.08),
+          splashColor: AppColors.background.withValues(alpha: 0.18),
+          highlightColor: AppColors.background.withValues(alpha: 0.08),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(
@@ -162,8 +161,8 @@ class LCorpButton extends StatelessWidget {
                 label,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: activeColor,
-                letterSpacing: 1.5,
+                color: textColor,
+                letterSpacing: 1.8,
                 textAlign: TextAlign.center,
               ),
             ),

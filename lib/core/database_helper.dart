@@ -3,33 +3,19 @@ import 'package:sqflite/sqflite.dart';
 
 /// 全局 sqflite 数据库初始化与建表。
 ///
-/// 5 张表：
-/// - abnormalities：异想体档案与运行时状态
+/// 精简版（v1.1）：
+/// - abnormalities：异想体档案与解锁状态
 /// - diary_entries：日记条目（含隐藏的 resonanceDeltas JSON）
-/// - work_logs：工作执行历史
-/// - agents：员工
-/// - ego_inventory：已获得的 EGO 装备库存
-///
-/// 另含 1 张 KV 表 `app_state` 用于存储 PE Box 全局余额、当日 DailyState 等。
 class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String dbFileName = 'lc_lab.db';
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
 
   // 表名
   static const String tableAbnormalities = 'abnormalities';
   static const String tableDiaryEntries = 'diary_entries';
-  static const String tableWorkLogs = 'work_logs';
-  static const String tableAgents = 'agents';
-  static const String tableEgoInventory = 'ego_inventory';
-  static const String tableAppState = 'app_state';
-
-  // app_state KV keys
-  static const String kPeBoxBalance = 'pe_box_balance';
-  static const String kDailyState = 'daily_state';
-  static const String kLastQliphothScan = 'last_qliphoth_scan';
 
   Database? _db;
 
@@ -52,17 +38,17 @@ class DatabaseHelper {
     );
   }
 
+  /// v1.1 重构：旧 schema 直接 DROP 重建（用户数据丢失，可接受）。
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // 出逃状态字段
-      await db.execute(
-        'ALTER TABLE $tableAbnormalities '
-        'ADD COLUMN isEscaped INTEGER NOT NULL DEFAULT 0',
-      );
-      await db.execute(
-        'ALTER TABLE $tableAbnormalities ADD COLUMN escapeStartedAt TEXT',
-      );
-    }
+    final Batch batch = db.batch();
+    batch.execute('DROP TABLE IF EXISTS $tableAbnormalities');
+    batch.execute('DROP TABLE IF EXISTS $tableDiaryEntries');
+    batch.execute('DROP TABLE IF EXISTS work_logs');
+    batch.execute('DROP TABLE IF EXISTS agents');
+    batch.execute('DROP TABLE IF EXISTS ego_inventory');
+    batch.execute('DROP TABLE IF EXISTS app_state');
+    await batch.commit(noResult: true);
+    await _onCreate(db, newVersion);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -74,24 +60,14 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         grade TEXT NOT NULL,
         featureTags TEXT NOT NULL,
-        workTypeWeights TEXT NOT NULL,
         requiredDays INTEGER NOT NULL,
         requiredResonance INTEGER NOT NULL,
         currentResonance INTEGER NOT NULL DEFAULT 0,
         isUnlocked INTEGER NOT NULL DEFAULT 0,
         isInitial INTEGER NOT NULL DEFAULT 0,
         unlockDate TEXT,
-        energyLevel INTEGER NOT NULL DEFAULT 50,
-        qliphothCounter INTEGER NOT NULL,
-        qliphothMax INTEGER NOT NULL,
-        breachType TEXT NOT NULL,
-        penaltyAmount INTEGER,
-        escapeDrain INTEGER,
-        isEscaped INTEGER NOT NULL DEFAULT 0,
-        escapeStartedAt TEXT,
         description TEXT NOT NULL,
-        manageNote TEXT NOT NULL,
-        workReactions TEXT NOT NULL
+        manageNote TEXT NOT NULL
       )
     ''');
 
@@ -108,55 +84,6 @@ class DatabaseHelper {
     batch.execute(
       'CREATE INDEX idx_diary_createdAt ON $tableDiaryEntries(createdAt)',
     );
-
-    batch.execute('''
-      CREATE TABLE $tableWorkLogs (
-        id TEXT PRIMARY KEY,
-        abnormalityId TEXT NOT NULL,
-        agentId TEXT NOT NULL,
-        workType TEXT NOT NULL,
-        success INTEGER NOT NULL,
-        isCriticalFail INTEGER NOT NULL,
-        peBoxGained INTEGER NOT NULL,
-        createdAt TEXT NOT NULL
-      )
-    ''');
-    batch.execute(
-      'CREATE INDEX idx_work_createdAt ON $tableWorkLogs(createdAt)',
-    );
-    batch.execute(
-      'CREATE INDEX idx_work_abnormality ON $tableWorkLogs(abnormalityId, createdAt)',
-    );
-
-    batch.execute('''
-      CREATE TABLE $tableAgents (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        avatarPath TEXT,
-        hp INTEGER NOT NULL,
-        maxHp INTEGER NOT NULL,
-        aptitude TEXT NOT NULL,
-        equippedEgoIds TEXT NOT NULL,
-        isUser INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-
-    batch.execute('''
-      CREATE TABLE $tableEgoInventory (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
-        cost INTEGER NOT NULL,
-        bonusStats TEXT NOT NULL
-      )
-    ''');
-
-    batch.execute('''
-      CREATE TABLE $tableAppState (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      )
-    ''');
 
     await batch.commit(noResult: true);
   }

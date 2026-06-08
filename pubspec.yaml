@@ -67,7 +67,6 @@ flutter:
 
   assets:
     - assets/presets/abnormalities.json
-    - assets/presets/ego_gears.json
     - assets/abnormalities/icons/
     - assets/abnormalities/portraits/
 
