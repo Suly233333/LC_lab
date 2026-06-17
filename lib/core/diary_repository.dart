@@ -42,6 +42,11 @@ class DiaryRepository {
     );
   }
 
+  Future<void> clearAll() async {
+    final Database db = await _helper.database;
+    await db.delete(DatabaseHelper.tableDiaryEntries);
+  }
+
   /// 全量按时间倒序读取。
   Future<List<DiaryEntry>> getAll() async {
     final Database db = await _helper.database;

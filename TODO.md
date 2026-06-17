@@ -75,3 +75,16 @@
 - [x] **9.7** 数据库 schema 升级 v3：DROP 所有旧表后重建，仅保留 `abnormalities` 与 `diary_entries`
 - [x] **9.8** 详情页重写为简化版：立绘 + 等级 + 描述 + 管理备注 + `BEGIN COMMUNICATION` 按钮
 - [x] **9.9** 同步更新 AGENT.md / TODO.md / README.md
+
+---
+
+## 第十阶段：v1.2 底部导航与体验重构
+
+- [x] **10.1** 新增 `MainShellPage`，使用底部 Tab 承载 LOGS / GALLERY / COMMS / SYSTEM，并通过 `IndexedStack` 保留 Tab 状态
+- [x] **10.2** 新增 `CommunicationListPage` 与 `SettingsPage`
+- [x] **10.3** 将解锁仪式动画监听上移到主壳，支持跨 Tab 弹出
+- [x] **10.4** 移除观测日志页顶部 GALLERY 入口，由底部 Tab 统一承载
+- [x] **10.5** 档案库新增已解锁条目的名称搜索与等级筛选
+- [x] **10.6** 对话页新增相关观测预览入口，不显示任何共鸣度数值
+- [x] **10.7** 观测日志列表按 TODAY / YESTERDAY / THIS WEEK / EARLIER 分组
+- [x] **10.8** 新增 `docs/references/` 与 `docs/wiki/` 占位，更新 `.gitignore`

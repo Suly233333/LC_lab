@@ -7,7 +7,6 @@ import '../models/diary_entry.dart';
 import '../state/app_providers.dart';
 import '../widgets/lcorp_button.dart';
 import '../widgets/lcorp_grid_background.dart';
-import 'abnormality_gallery_page.dart';
 import 'new_entry_page.dart';
 
 /// 观测日志列表页（Observation Logs）。
@@ -15,7 +14,9 @@ import 'new_entry_page.dart';
 /// 严格遵守"神秘感原则"：不展示任何共鸣度数值、增量、进度条或百分比。
 /// 仅列出日记的元信息（时间、标签、文本预览）与附件数量提示。
 class ObservationLogsPage extends ConsumerWidget {
-  const ObservationLogsPage({super.key});
+  const ObservationLogsPage({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,20 +25,7 @@ class ObservationLogsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('OBSERVATION LOGS'),
-        actions: [
-          IconButton(
-            tooltip: 'ABNORMALITY GALLERY',
-            icon: const Icon(Icons.visibility_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const AbnormalityGalleryPage(),
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: showAppBar ? AppBar(title: const Text('OBSERVATION LOGS')) : null,
       body: Stack(
         children: [
           const Positioned.fill(child: LCorpGridBackground()),
@@ -53,11 +41,11 @@ class ObservationLogsPage extends ConsumerWidget {
                 if (entries.isEmpty) {
                   return _EmptyState();
                 }
-                return ListView.separated(
+                final List<_EntryGroup> groups = _groupEntries(entries);
+                return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                  itemCount: entries.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (_, i) => _LogCard(entry: entries[i]),
+                  itemCount: groups.length,
+                  itemBuilder: (_, i) => _LogGroup(group: groups[i]),
                 );
               },
             ),
@@ -79,6 +67,69 @@ class ObservationLogsPage extends ConsumerWidget {
   Future<void> _openNewEntry(BuildContext context) {
     return Navigator.of(context).push<void>(
       MaterialPageRoute(builder: (_) => const NewEntryPage()),
+    );
+  }
+}
+
+List<_EntryGroup> _groupEntries(List<DiaryEntry> entries) {
+  final DateTime now = DateTime.now();
+  final DateTime today = DateTime(now.year, now.month, now.day);
+  final DateTime yesterday = today.subtract(const Duration(days: 1));
+  final DateTime weekStart = today.subtract(Duration(days: today.weekday - 1));
+  final Map<String, List<DiaryEntry>> buckets = <String, List<DiaryEntry>>{
+    'TODAY': <DiaryEntry>[],
+    'YESTERDAY': <DiaryEntry>[],
+    'THIS WEEK': <DiaryEntry>[],
+    'EARLIER': <DiaryEntry>[],
+  };
+  for (final DiaryEntry entry in entries) {
+    final DateTime d = DateTime(
+      entry.createdAt.year,
+      entry.createdAt.month,
+      entry.createdAt.day,
+    );
+    if (d == today) {
+      buckets['TODAY']!.add(entry);
+    } else if (d == yesterday) {
+      buckets['YESTERDAY']!.add(entry);
+    } else if (!d.isBefore(weekStart)) {
+      buckets['THIS WEEK']!.add(entry);
+    } else {
+      buckets['EARLIER']!.add(entry);
+    }
+  }
+  return buckets.entries
+      .where((e) => e.value.isNotEmpty)
+      .map((e) => _EntryGroup(label: e.key, entries: e.value))
+      .toList(growable: false);
+}
+
+class _EntryGroup {
+  const _EntryGroup({required this.label, required this.entries});
+  final String label;
+  final List<DiaryEntry> entries;
+}
+
+class _LogGroup extends StatelessWidget {
+  const _LogGroup({required this.group});
+
+  final _EntryGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TerminalText.title('// ${group.label}'),
+          const SizedBox(height: 8),
+          for (final DiaryEntry entry in group.entries) ...[
+            _LogCard(entry: entry),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
     );
   }
 }

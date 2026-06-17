@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
 import '../models/abnormality.dart';
+import '../models/diary_entry.dart';
 import '../services/attachment_service.dart';
 import '../state/app_providers.dart';
 import '../widgets/lcorp_button.dart';
@@ -120,6 +121,13 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('COMMUNICATION  /  ${abn?.name ?? ''}'),
+        actions: [
+          IconButton(
+            tooltip: 'RELATED OBSERVATIONS',
+            icon: const Icon(Icons.article_outlined),
+            onPressed: abn == null ? null : () => _showRelatedLogs(abn),
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -185,6 +193,33 @@ class _AttachmentChatPageState extends ConsumerState<AttachmentChatPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showRelatedLogs(Abnormality abnormality) async {
+    final List<DiaryEntry> entries =
+        ref.read(diaryListProvider).valueOrNull ?? const <DiaryEntry>[];
+    final List<DiaryEntry> related = entries
+        .where((entry) => (entry.resonanceDeltas[abnormality.id] ?? 0) > 0)
+        .toList(growable: false)
+      ..sort((a, b) {
+        final int byScore = (b.resonanceDeltas[abnormality.id] ?? 0)
+            .compareTo(a.resonanceDeltas[abnormality.id] ?? 0);
+        if (byScore != 0) return byScore;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        side: BorderSide(color: AppColors.primary, width: 1),
+      ),
+      builder: (_) => _RelatedLogsSheet(
+        abnormality: abnormality,
+        entries: related.take(5).toList(growable: false),
       ),
     );
   }
@@ -269,6 +304,126 @@ class _Bubble extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RelatedLogsSheet extends StatelessWidget {
+  const _RelatedLogsSheet({
+    required this.abnormality,
+    required this.entries,
+  });
+
+  final Abnormality abnormality;
+  final List<DiaryEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '// RELATED OBSERVATIONS / ${abnormality.name}',
+              style: const TextStyle(
+                fontFamily: AppTheme.monoFontFamily,
+                color: AppColors.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (entries.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'NO RELATED OBSERVATION FOUND',
+                    style: TextStyle(
+                      fontFamily: AppTheme.monoFontFamily,
+                      color: AppColors.hint,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: entries.length,
+                  separatorBuilder: (_, _) => const Divider(),
+                  itemBuilder: (_, i) => _RelatedLogTile(entry: entries[i]),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RelatedLogTile extends StatelessWidget {
+  const _RelatedLogTile({required this.entry});
+
+  final DiaryEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final String content = entry.content.trim().isEmpty
+        ? '(空白观测)'
+        : entry.content.trim();
+    final String date = entry.createdAt.toIso8601String().substring(0, 10);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            date,
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.primary,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            content,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.onBackground,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+          if (entry.cognitiveFilters.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 5,
+              runSpacing: 5,
+              children: entry.cognitiveFilters
+                  .map(
+                    (tag) => Text(
+                      '#$tag',
+                      style: const TextStyle(
+                        fontFamily: AppTheme.monoFontFamily,
+                        color: AppColors.hint,
+                        fontSize: 11,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ],
         ],
       ),
     );

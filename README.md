@@ -59,9 +59,12 @@ lib/
 ├── state/                 # Riverpod Provider
 │   └── app_providers.dart
 ├── pages/                 # 页面
-│   ├── observation_logs_page.dart   # 观测日志列表（首页）
+│   ├── main_shell_page.dart         # 底部 Tab 主壳
+│   ├── observation_logs_page.dart   # 观测日志列表
 │   ├── new_entry_page.dart          # 新建观测
 │   ├── abnormality_gallery_page.dart# 档案库（自动弹仪式动画）
+│   ├── communication_list_page.dart # 已解锁异想体对话列表
+│   ├── settings_page.dart           # 系统设置 / 导出 / 重置
 │   ├── abnormality_detail_page.dart # 档案详情 + 进入对话
 │   └── attachment_chat_page.dart    # 与异想体对话
 └── widgets/               # 可复用组件
@@ -76,6 +79,9 @@ assets/
 └── abnormalities/
     ├── icons/                # 档案库缩略：{id}.png
     └── portraits/            # 详情 / 仪式立绘：{id}.png
+docs/
+├── references/               # 用户放置的游戏截图参考
+└── wiki/                     # 离线 wiki 摘录缓存（默认忽略内容）
 ```
 
 ---
@@ -211,7 +217,15 @@ class DiaryEntry {
 
 ---
 
-## 9. 路线图
+## 9. v1.2 当前结构
+
+- 首页改为 `MainShellPage`，通过底部 Tab 切换 `LOGS / GALLERY / COMMS / SYSTEM`，并用 `IndexedStack` 保留各 Tab 状态。
+- 解锁仪式动画由主壳全局监听 `pendingUnlocksProvider`，不再只依赖档案库页。
+- 档案库支持已解锁异想体搜索和等级筛选。
+- 对话页支持调取相关观测预览，内部按隐藏匹配结果排序，但不显示任何共鸣度数值。
+- 系统页提供 GLM Key 状态、数据导出到剪贴板、本地数据重置和调试开关说明。
+
+## 10. 路线图
 
 | 阶段 | 状态 |
 | ---- | ---- |
@@ -229,7 +243,7 @@ class DiaryEntry {
 
 ---
 
-## 10. 安全提示
+## 11. 安全提示
 
 - **永远不要把真实 API Key 提交到 git**。`secrets.dart` 已被 `.gitignore` 屏蔽
 - 切勿在 PR / Issue / 截图 / 日志中粘贴 Key 明文

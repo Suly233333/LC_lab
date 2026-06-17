@@ -79,6 +79,11 @@ class AbnormalityRepository {
     );
   }
 
+  Future<void> clearAll() async {
+    final Database db = await _helper.database;
+    await db.delete(DatabaseHelper.tableAbnormalities);
+  }
+
   /// 累加 currentResonance（隐藏字段）。
   Future<void> addResonance(String id, int delta) async {
     final Database db = await _helper.database;

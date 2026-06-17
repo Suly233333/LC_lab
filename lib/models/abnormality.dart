@@ -57,12 +57,12 @@ class Abnormality {
 
   /// 档案库 / 列表使用的图标资源路径（按 ID 推导）。
   /// 缺图时上层应回退到默认图标占位。
-  String get iconAssetPath => 'assets/abnormalities/icons/$id.png';
+  String get iconAssetPath => 'assets/abnormalities/icons/$name.png';
 
   /// 详情页 / 提取仪式使用的立绘资源路径（按 ID 推导）。
   /// 缺图时上层应回退到默认占位。
   String get portraitAssetPath =>
-      'assets/abnormalities/portraits/$id.png';
+      'assets/abnormalities/portraits/$name.png';
 
   /// 从 JSON / sqflite map 反序列化。
   factory Abnormality.fromJson(Map<String, dynamic> json) {

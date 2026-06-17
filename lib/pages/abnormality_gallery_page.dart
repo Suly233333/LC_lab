@@ -6,7 +6,6 @@ import '../models/abnormality.dart';
 import '../state/app_providers.dart';
 import '../widgets/abnormality_image.dart';
 import '../widgets/caution_overlay.dart';
-import '../widgets/extraction_ceremony_widget.dart';
 import '../widgets/lcorp_grid_background.dart';
 import 'abnormality_detail_page.dart';
 
@@ -17,7 +16,9 @@ import 'abnormality_detail_page.dart';
 /// - 监听 [pendingUnlocksProvider]，自动弹出仪式动画揭晓新解锁项。
 /// - 不展示任何共鸣度数值 / 进度条。
 class AbnormalityGalleryPage extends ConsumerStatefulWidget {
-  const AbnormalityGalleryPage({super.key});
+  const AbnormalityGalleryPage({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   ConsumerState<AbnormalityGalleryPage> createState() =>
@@ -26,55 +27,19 @@ class AbnormalityGalleryPage extends ConsumerStatefulWidget {
 
 class _AbnormalityGalleryPageState
     extends ConsumerState<AbnormalityGalleryPage> {
-  bool _showingCeremony = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeRunCeremony();
-    });
-  }
-
-  Future<void> _maybeRunCeremony() async {
-    if (_showingCeremony) return;
-    final List<Abnormality> queue = ref.read(pendingUnlocksProvider);
-    if (queue.isEmpty) return;
-    _showingCeremony = true;
-    try {
-      for (final Abnormality a in queue) {
-        if (!mounted) break;
-        await showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            insetPadding: const EdgeInsets.all(24),
-            child: ExtractionCeremonyWidget(abnormality: a),
-          ),
-        );
-      }
-      ref.read(pendingUnlocksProvider.notifier).clear();
-    } finally {
-      _showingCeremony = false;
-    }
-  }
+  String _query = '';
+  String _grade = 'ALL';
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<List<Abnormality>>(pendingUnlocksProvider, (prev, next) {
-      if (next.isNotEmpty) _maybeRunCeremony();
-    });
-
     final AsyncValue<List<Abnormality>> async =
         ref.watch(abnormalitiesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('ABNORMALITY GALLERY'),
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(title: const Text('ABNORMALITY GALLERY'))
+          : null,
       body: Stack(
         children: [
           const Positioned.fill(child: LCorpGridBackground()),
@@ -84,11 +49,34 @@ class _AbnormalityGalleryPageState
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
               error: (e, _) => Center(child: Text('// ARCHIVE ERROR: $e')),
-              data: (list) => _buildGrid(context, list),
+              data: (list) => _buildContent(context, list),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, List<Abnormality> list) {
+    final List<Abnormality> filtered = list.where((a) {
+      if (!a.isUnlocked) return false;
+      if (_grade != 'ALL' && a.grade != _grade) return false;
+      final String q = _query.trim().toLowerCase();
+      if (q.isEmpty) return true;
+      return a.name.toLowerCase().contains(q) ||
+          a.id.toLowerCase().contains(q);
+    }).toList(growable: false);
+
+    return Column(
+      children: [
+        _GalleryFilters(
+          query: _query,
+          grade: _grade,
+          onQueryChanged: (value) => setState(() => _query = value),
+          onGradeChanged: (value) => setState(() => _grade = value),
+        ),
+        Expanded(child: _buildGrid(context, filtered)),
+      ],
     );
   }
 
@@ -113,6 +101,83 @@ class _AbnormalityGalleryPageState
       ),
       itemCount: list.length,
       itemBuilder: (_, i) => _AbnormalityCard(abnormality: list[i]),
+    );
+  }
+}
+
+class _GalleryFilters extends StatelessWidget {
+  const _GalleryFilters({
+    required this.query,
+    required this.grade,
+    required this.onQueryChanged,
+    required this.onGradeChanged,
+  });
+
+  final String query;
+  final String grade;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<String> onGradeChanged;
+
+  static const List<String> _grades = <String>[
+    'ALL',
+    'ZAYIN',
+    'TETH',
+    'HE',
+    'WAW',
+    'ALEPH',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        border: Border(bottom: BorderSide(color: AppColors.primary, width: 1)),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            onChanged: onQueryChanged,
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFontFamily,
+              color: AppColors.onBackground,
+            ),
+            decoration: const InputDecoration(
+              isDense: true,
+              prefixIcon: Icon(Icons.search, color: AppColors.primary),
+              hintText: 'SEARCH UNLOCKED DOSSIERS',
+            ),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _grades.map((g) {
+                final bool selected = grade == g;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(g),
+                    selected: selected,
+                    onSelected: (_) => onGradeChanged(g),
+                    selectedColor: AppColors.primary,
+                    backgroundColor: AppColors.surface,
+                    side: const BorderSide(color: AppColors.primary),
+                    labelStyle: TextStyle(
+                      fontFamily: AppTheme.monoFontFamily,
+                      color: selected ? AppColors.background : AppColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: const RoundedRectangleBorder(),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

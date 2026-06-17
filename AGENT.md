@@ -114,7 +114,15 @@ class Abnormality {
 
 ---
 
-## 6. 初始异想体预设档案（abnormalities.json）
+## 6. v1.2 UI 结构补充
+
+- 应用入口为 `MainShellPage`，底部 Tab 为 `LOGS / GALLERY / COMMS / SYSTEM`。
+- `pendingUnlocksProvider` 的仪式动画应在主壳层监听，保证任意 Tab 都能弹出。
+- 档案库搜索与等级筛选只展示已解锁条目；未解锁条目不得因搜索命中而泄露。
+- 对话页可读取相关观测预览，但严禁显示 `currentResonance`、`requiredResonance`、`resonanceDeltas` 的数值。
+- `docs/references/` 用于用户截图参考，`docs/wiki/` 用于离线 wiki 摘录缓存。
+
+## 7. 初始异想体预设档案（abnormalities.json）
 
 ### 6.1 「一罪与百善」(O-03-03)
 
